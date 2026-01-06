@@ -3,6 +3,8 @@ package com.example.demo.controller;
 import com.example.demo.dto.request.UserRequestDTO;
 import com.example.demo.dto.response.ResponseData;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,7 +16,7 @@ public class UserController {
 
     @PostMapping("/")
     public ResponseData<Integer> addUser(@Valid @RequestBody UserRequestDTO requestDTO) {
-        System.out.println(requestDTO);
+//        System.out.println(requestDTO);
         return new ResponseData<>(HttpStatus.CREATED.value(), "User added successfully!", 1);
     }
 
@@ -35,7 +37,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseData<UserRequestDTO> getUser(@PathVariable int userId) {
+    public ResponseData<UserRequestDTO> getUser(@PathVariable @Min(1) @Max(10) @Valid int userId) {
         return new ResponseData<>(HttpStatus.OK.value(), "user", new UserRequestDTO("Tay", "Java", "abc@gmail.com", "0321123123"));
     }
 

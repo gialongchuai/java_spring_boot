@@ -8,10 +8,10 @@ import jakarta.validation.constraints.NotNull;
 import javax.xml.crypto.Data;
 
 public class UserRequestDTO {
-    @NotBlank
+    @NotBlank(message = "firstName must not be blank!")
     private String firstName;
 
-    @NotNull(message = "lastName must not be null")
+    @NotNull(message = "lastName must not be null!")
     private String lastName;
 
     @Email
