@@ -3,9 +3,11 @@ package com.example.demo.controller;
 import com.example.demo.configuration.Translator;
 import com.example.demo.dto.request.UserRequestDTO;
 import com.example.demo.dto.response.ResponseData;
+import com.example.demo.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,10 +17,13 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
 
+    @Autowired
+    private UserService userService;
+
     @PostMapping("/")
     public ResponseData<Integer> addUser(@Valid @RequestBody UserRequestDTO requestDTO) {
 //        System.out.println(requestDTO);
-        return new ResponseData<>(HttpStatus.CREATED.value(), Translator.toLocale("user.add.success"), 1);
+        return new ResponseData<>(HttpStatus.CREATED.value(), Translator.toLocale("user.add.success"), userService.addUser(requestDTO));
     }
 
     @PutMapping("/{userId}")
@@ -38,8 +43,8 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseData<UserRequestDTO> getUser(@PathVariable @Min(1) @Max(10) @Valid int userId) {
-        return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), new UserRequestDTO("Tay", "Java", "abc@gmail.com", "0321123123"));
+    public ResponseData<UserRequestDTO> getUser(@PathVariable @Min(1) @Max(10) @Valid int userId) { // new UserRequestDTO("Tay", "Java", "abc@gmail.com", "0321123123")
+        return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.getUser(userId));
     }
 
     @GetMapping("/list")
