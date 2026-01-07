@@ -1,0 +1,314 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API-service document",
+    "description": "description for document",
+    "license": {
+      "name": "API license",
+      "url": "http://domain.vn/license"
+    },
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Server Test"
+    }
+  ],
+  "paths": {
+    "/user/{userId}": {
+      "get": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Get information a user",
+        "description": "API get a user!",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 10,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataUserRequestDTO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Update user",
+        "description": "API update a user!",
+        "operationId": "updateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataObject"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Delete a user",
+        "description": "API delete a user!",
+        "operationId": "deleteUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataObject"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Update status user",
+        "description": "API update status a user!",
+        "operationId": "changeUserStatus",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/": {
+      "post": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Add user",
+        "description": "API create a user!",
+        "operationId": "addUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequestDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataInteger"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/list": {
+      "get": {
+        "tags": [
+          "User Controller"
+        ],
+        "summary": "Get information a user list",
+        "description": "API get list user!",
+        "operationId": "getUserList",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseDataListUserRequestDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserRequestDTO": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName"
+        ]
+      },
+      "ResponseDataObject": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+
+          }
+        }
+      },
+      "ResponseDataInteger": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ResponseDataUserRequestDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserRequestDTO"
+          }
+        }
+      },
+      "ResponseDataListUserRequestDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserRequestDTO"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+Beta
+0 / 0
+used queries
+1

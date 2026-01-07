@@ -1,0 +1,7 @@
+open:
+  api:
+    title: API-service document
+    version: v1.0.0
+    description: description for document
+    serverUrl: http://localhost:8080
+    serverName: Server Test
