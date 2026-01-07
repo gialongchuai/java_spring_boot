@@ -1,7 +1,8 @@
-open:
-  api:
-    title: API-service document
-    version: v1.0.0
-    description: description for document
-    serverUrl: http://localhost:8080
-    serverName: Server Test
+# Định nghĩa cho 3 môi trường chạy trên swagger
+# mvn clean package -P dev || test || prod || ....
+#  java -jar target/demo-0.0.1-SNAPSHOT.jar
+
+spring:
+  profiles:
+    active: @spring.profiles.active@
+    ## Nếu start bị lỗi @ thì nên set cứng chỗ này dev test hay prod cho nó chạy normal bình thường lại
