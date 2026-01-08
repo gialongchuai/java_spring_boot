@@ -12,12 +12,19 @@ public class ErrorResponse {
     public ErrorResponse() {
     }
 
+    public ErrorResponse(String message) {
+        this.message = message;
+    }
+
     public ErrorResponse(Date timestamp, int status, String path, String error, String message) {
         this.timestamp = timestamp;
         this.status = status;
         this.path = path;
         this.error = error;
         this.message = message;
+    }
+
+    public ErrorResponse(int status, String message) {
     }
 
     public Date getTimestamp() {

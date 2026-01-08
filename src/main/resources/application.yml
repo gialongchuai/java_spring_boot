@@ -4,5 +4,5 @@
 
 spring:
   profiles:
-    active: @spring.profiles.active@
+    active: dev
     ## Nếu start bị lỗi @ thì nên set cứng chỗ này dev test hay prod cho nó chạy normal bình thường lại

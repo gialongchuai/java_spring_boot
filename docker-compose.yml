@@ -1,0 +1,32 @@
+services:
+  pg_tutorial:
+    container_name: pg_tutorial
+    image: "postgres:latest"
+    environment:
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "123abc"
+    ports:
+      - "5432:5432"
+    volumes: # dung volume de khong mat du lieu
+      - "postgres_data:/var/lib/postgresql/data"
+    networks:
+      - postgres
+
+  pdadmin_tutorial:
+    container_name: pdadmin_tutorial
+    image: "dpage/pgadmin4:latest"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "abc@example.com"
+      PGADMIN_DEFAULT_PASSWORD: "123"
+    ports:
+      - "5050:80"
+    networks:
+      - postgres
+    depends_on: # cho host khoi tao truoc roi moi tao trang login mail + pass
+      - pg_tutorial
+
+volumes:
+  postgres_data:
+
+networks: # do goi depend on bang ten nen tao DNS network rieng de goi duoc ten
+  postgres:

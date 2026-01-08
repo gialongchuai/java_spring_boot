@@ -4,6 +4,17 @@ spring:
   config:
     activate:
       on-profile: dev
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/my_tutorial_db}
+    username: ${POSTGRES_USER:user}
+    password: ${POSTGRES_PASSWORD:123abc}
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: none
 open:
   api:
     title: API-service document

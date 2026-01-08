@@ -24,4 +24,17 @@ public class GlobalExceptionHandler {
 
         return errorResponse;
     }
+
+    @ExceptionHandler({ResourceNotFoundException.class})
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleResourceNotFoundException(ResourceNotFoundException e, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setTimestamp(new Date());
+        errorResponse.setStatus(HttpStatus.NOT_FOUND.value());
+        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setError(HttpStatus.NOT_FOUND.getReasonPhrase());
+        errorResponse.setMessage(e.getMessage());
+
+        return errorResponse;
+    }
 }
