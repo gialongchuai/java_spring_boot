@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Getter
+@ToString
 public class UserRequestDTO {
     @NotBlank(message = "firstName must not be blank!")
     private String firstName;

@@ -17,7 +17,7 @@ import java.util.Locale;
 public class LocalResolver extends AcceptHeaderLocaleResolver implements WebMvcConfigurer {
 
     List<Locale> locales = List.of(Locale.ENGLISH
-            , Locale.FRANCE
+            , new Locale("mx")
             , new Locale("vi")
     );
 
@@ -27,7 +27,7 @@ public class LocalResolver extends AcceptHeaderLocaleResolver implements WebMvcC
         String languageHeader = request.getHeader("Accept-Language");
         // Nếu không truyền gì vào header thì mặc định là lấy tếng anh default
         // còn nêếu có thì parse nó và tìm kiếm
-        return StringUtils.hasLength(languageHeader) ? Locale.lookup(Locale.LanguageRange.parse(languageHeader), locales) : Locale.getDefault();
+        return StringUtils.hasLength(languageHeader) ? Locale.lookup(Locale.LanguageRange.parse(languageHeader), locales) : Locale.ENGLISH;
     }
 
 //    @Bean
