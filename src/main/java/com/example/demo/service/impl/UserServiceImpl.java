@@ -1,6 +1,8 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.configuration.Translator;
 import com.example.demo.dto.request.UserRequestDTO;
+import com.example.demo.dto.response.PageResponse;
 import com.example.demo.dto.response.UserResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Address;
@@ -12,12 +14,17 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -141,11 +148,113 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponse> getAllUsers(int pageNo, int pageSize) {
-        return List.of();
+    public PageResponse<?> getAllUsers(int pageNo, int pageSize, String sortBy) {
+        int page = pageNo; // gọi 0 1 cũng ra trang đầu
+        if (pageNo > 0) {
+            page--;
+        }
+
+        List<Sort.Order> orders = new ArrayList<>();
+        if (StringUtils.hasLength(sortBy)) { // thỏa sort theo tiêu chí firstName:asc hoặc lastName:desc
+            Pattern pattern = Pattern.compile("(\\w+?)(:)(.*)"); // group 1 là cái gì cũng dc
+            Matcher matcher = pattern.matcher(sortBy); // gr 2 bắt buộc là :
+            if (matcher.find()) { // nếu thỏa           // gr 3 là gì cũng dc dưới kiểm tra phải là asc or desc
+                // tìm kiểu trong regex với cái group 3: (.*)
+                // TĂNG:firstName || GIẢM:lastName => ví dụ đại khái vậy
+                if (matcher.group(3).equalsIgnoreCase("asc")) {
+                    orders.add(new Sort.Order(Sort.Direction.ASC, matcher.group(1)));
+                } else if (matcher.group(3).equalsIgnoreCase("desc")) {
+                    orders.add(new Sort.Order(Sort.Direction.DESC, matcher.group(1)));
+                }
+            }
+        }
+
+        Pageable pageable = StringUtils.hasLength(sortBy) ? PageRequest.of(page, pageSize, Sort.by(orders)) : PageRequest.of(page, pageSize);
+        Page<User> users = userRepository.findAll(pageable);
+
+        List<UserResponse> userResponses = users.stream().map(user -> {
+            return UserResponse.builder()
+                    .id(user.getId())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .dateOfBirth(user.getDateOfBirth())
+                    .gender(user.getGender())
+                    .username(user.getUsername())
+                    .password(user.getPassword())
+                    .type(user.getType())
+                    .status(user.getStatus())
+                    //                    .addresses(user.getAddresses())
+                    .build();
+        }).toList();
+
+        return PageResponse.builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPages(users.getTotalPages())
+                .totalElements(users.getTotalElements())
+                .items(userResponses)
+                .build();
     }
 
+    @Override
+    public PageResponse<?> getAllUsersOrderWithMultipleColumns(int pageNo, int pageSize, String... sorts) {
+        int page = pageNo; // gọi 0 1 cũng ra trang đầu
+        if (pageNo > 0) {
+            page--;
+        }
+        List<Sort.Order> orders = new ArrayList<>();
+        if(Objects.nonNull(sorts)) {
+            for (String sort : sorts) {
+                if (StringUtils.hasLength(sort)) {
+                    Pattern pattern = Pattern.compile("(\\w+?)(:)(.*)");
+                    Matcher matcher = pattern.matcher(sort);
+                    if (matcher.find()) { // nếu thỏa
+                        // tìm kiểu trong regex với cái group 3: (.*)
+                        // TĂNG:firstName || GIẢM:lastName => ví dụ đại khái vậy
+                        if (matcher.group(3).equalsIgnoreCase("asc")) {
+                            orders.add(new Sort.Order(Sort.Direction.ASC, matcher.group(1)));
+                        } else if (matcher.group(3).equalsIgnoreCase("desc")) {
+                            orders.add(new Sort.Order(Sort.Direction.DESC, matcher.group(1)));
+                        }
+                    }
+                }
+            }
+        }
+
+        Pageable pageable = Objects.isNull(sorts) ? PageRequest.of(page, pageSize) : PageRequest.of(page, pageSize, Sort.by(orders));
+        Page<User> users = userRepository.findAll(pageable);
+
+        List<UserResponse> userResponses = users.stream().map(user -> {
+            return UserResponse.builder()
+                    .id(user.getId())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .dateOfBirth(user.getDateOfBirth())
+                    .gender(user.getGender())
+                    .username(user.getUsername())
+                    .password(user.getPassword())
+                    .type(user.getType())
+                    .status(user.getStatus())
+//                    .addresses(user.getAddresses())
+                    .build();
+        }).toList();
+
+        return PageResponse.builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPages(users.getTotalPages())
+                .totalElements(users.getTotalElements())
+                .items(userResponses)
+                .build();
+    }
+
+
+
     private User getUserById(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("user.not.found")));
     }
 }
