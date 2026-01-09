@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.request.UserRequestDTO;
+import com.example.demo.dto.response.PageResponse;
 import com.example.demo.dto.response.UserResponse;
 import com.example.demo.util.UserStatus;
 
@@ -12,5 +13,6 @@ public interface UserService {
     void changeStatusUser(Long userId, UserStatus userStatus);
     void deleteUser(Long userId);
     UserResponse getUser(Long userId);
-    List<UserResponse> getAllUsers(int pageNo, int pageSize);
+    PageResponse getAllUsers(int pageNo, int pageSize, String sortBy);
+    PageResponse getAllUsersOrderWithMultipleColumns(int pageNo, int pageSize, String... sorts);
 }
