@@ -8,6 +8,7 @@ import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Address;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.custom.SearchRepository;
 import com.example.demo.service.UserService;
 import com.example.demo.util.UserStatus;
 import lombok.AccessLevel;
@@ -31,7 +32,9 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class UserServiceImpl implements UserService {
+
     UserRepository userRepository;
+    SearchRepository searchRepository;
 
     @Override
     public Long saveUser(UserRequestDTO requestDTO) {
@@ -252,6 +255,10 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    @Override
+    public PageResponse<?> getUserListOrderWithMultipleColumnsAndSearch(int pageNo, int pageSize, String search, String sortBy) {
+        return searchRepository.getUserListOrderWithMultipleColumnsAndSearch(pageNo, pageSize, search, sortBy);
+    }
 
 
     private User getUserById(Long userId) {

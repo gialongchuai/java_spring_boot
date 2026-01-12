@@ -16,9 +16,11 @@ import java.util.Set;
 @Setter
 @Getter
 @Builder
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "tbl_user")
+@Table(name = "tbl_user")
+@Entity(name = "User")
 public class User extends AbstractEntity {
 
     @Column(name = "first_name")

@@ -43,7 +43,7 @@ Delete:
 GetUser:
 `http://localhost:8080/user/14`
 
-Phân trang với 2 cái get bên dưới:
+Phân trang với 3 cái get bên dưới:
 
 GetUser list với 1 tiêu chí:
 `http://localhost:8080/user/list?pageNo=1&pageSize=10&sortBy=lastName:asc`
@@ -51,6 +51,9 @@ GetUser list với 1 tiêu chí:
 GetUser list với nhiều tiêu chí:
 
 `http://localhost:8080/user/list-order-with-multiple-columns?pageNo=1&pageSize=10&sortBy=lastName:asc, id:desc`
+
+GetUser list với 1 tiêu dùng với EntityManager đê customize query
+`http://localhost:8080/user/list-order-with-multiple-columns-and-search?pageNo=0&pageSize=10&search=th&sortBy=id:asc`
 
 ---
 
@@ -104,3 +107,5 @@ json cho post, update , ...
   ]
 }
 ```
+
+<img width="638" height="393" alt="image" src="https://github.com/user-attachments/assets/101f06b8-4dd0-420c-855f-660a2c31ac60" />

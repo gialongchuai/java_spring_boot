@@ -55,7 +55,8 @@ public class UserController {
         try {
             userService.updateUser(userId, requestDTO);
             return new ResponseData<>(HttpStatus.ACCEPTED.value(), Translator.toLocale("user.update.success"));
-        } catch (ResourceNotFoundException e) { // Cái post nếu lỗi thì quăng cái Exception còn cái get do bên service có quăng cái resource nên
+        } catch (
+                ResourceNotFoundException e) { // Cái post nếu lỗi thì quăng cái Exception còn cái get do bên service có quăng cái resource nên
             log.error("Error update user: {} {}", e.getMessage(), e.getCause()); // bên này bắt đúng cái lỗi đó luôn !!!
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), e.getMessage()); // đối với lỗi do resource thì quăng lỗi i18n luôn.
         }
@@ -121,6 +122,21 @@ public class UserController {
         System.out.println("Dang get users voi so trang: " + pageNo + ", so record: " + pageSize);
         try {
             return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.getAllUsersOrderWithMultipleColumns(pageNo, pageSize, sortBy));
+        } catch (Exception e) {
+            log.error("Error get users: {} {}", e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("user.get.fail"));
+        }
+    }
+
+    @Operation(summary = "Get information a user list with multiple columns and search", description = "API get list user and order list with multiple columns and search!")
+    @GetMapping("/list-order-with-multiple-columns-and-search")
+    public ResponseData<PageResponse> getUserListOrderWithMultipleColumnsAndSearch(@RequestParam(defaultValue = "0", required = false) int pageNo
+            , @Min(5) @RequestParam(defaultValue = "20", required = false) int pageSize
+            , @RequestParam(required = false) String search
+            , @RequestParam(required = false) String sortBy) {
+        System.out.println("Dang get users voi so trang: " + pageNo + ", so record: " + pageSize);
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.getUserListOrderWithMultipleColumnsAndSearch(pageNo, pageSize,search, sortBy));
         } catch (Exception e) {
             log.error("Error get users: {} {}", e.getMessage(), e.getCause());
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("user.get.fail"));
