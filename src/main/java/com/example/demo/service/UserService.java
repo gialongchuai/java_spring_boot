@@ -16,5 +16,6 @@ public interface UserService {
     UserResponse getUser(Long userId);
     PageResponse<?> getAllUsers(int pageNo, int pageSize, String sortBy);
     PageResponse<?> getAllUsersOrderWithMultipleColumns(int pageNo, int pageSize, String... sorts);
-    PageResponse<?> getUserListOrderWithMultipleColumnsAndSearch(int pageNo, int pageSize, String search, String sortBy);
+    PageResponse<?> getUserListOrderWithOneColumnAndSearch(int pageNo, int pageSize, String search, String sortBy);
+    PageResponse<?> advanceSearchByCriteria(int pageNo, int pageSize, String sortBy, String street, String... search);
 }

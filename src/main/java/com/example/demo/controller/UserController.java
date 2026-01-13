@@ -104,7 +104,7 @@ public class UserController {
     @GetMapping("/list")
     public ResponseData<PageResponse> getUserList(@RequestParam(defaultValue = "0", required = false) int pageNo
             , @Min(5) @RequestParam(defaultValue = "20", required = false) int pageSize
-            , @RequestParam(required = false) String sortBy) {
+            , @RequestParam(required = false) String sortBy) { // sort nhiều column này là dùng Pageable
 //        System.out.println("Dang get users voi so trang: " + pageNo + ", so record: " + pageSize);
         try {
             return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.getAllUsers(pageNo, pageSize, sortBy));
@@ -118,7 +118,7 @@ public class UserController {
     @GetMapping("/list-order-with-multiple-columns")
     public ResponseData<PageResponse> getUserListOrderWithMultipleColumns(@RequestParam(defaultValue = "0", required = false) int pageNo
             , @Min(5) @RequestParam(defaultValue = "20", required = false) int pageSize
-            , @RequestParam(required = false) String... sortBy) {
+            , @RequestParam(required = false) String... sortBy) { // sort nhiều column này là dùng Pageable
         System.out.println("Dang get users voi so trang: " + pageNo + ", so record: " + pageSize);
         try {
             return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.getAllUsersOrderWithMultipleColumns(pageNo, pageSize, sortBy));
@@ -128,15 +128,32 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Get information a user list with multiple columns and search", description = "API get list user and order list with multiple columns and search!")
-    @GetMapping("/list-order-with-multiple-columns-and-search")
-    public ResponseData<PageResponse> getUserListOrderWithMultipleColumnsAndSearch(@RequestParam(defaultValue = "0", required = false) int pageNo
+    @Operation(summary = "Get information a user list with order one column and search", description = "API get list user and order list with one column and search!")
+    @GetMapping("/list-order-with-one-columns-and-search")
+    public ResponseData<PageResponse> getUserListOrderWithOneColumnAndSearch(@RequestParam(defaultValue = "0", required = false) int pageNo
             , @Min(5) @RequestParam(defaultValue = "20", required = false) int pageSize
             , @RequestParam(required = false) String search
-            , @RequestParam(required = false) String sortBy) {
+            , @RequestParam(required = false) String sortBy) { // sort ít này không dùng pageable được phải append vào order by của câu query
         System.out.println("Dang get users voi so trang: " + pageNo + ", so record: " + pageSize);
         try {
-            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.getUserListOrderWithMultipleColumnsAndSearch(pageNo, pageSize,search, sortBy));
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.getUserListOrderWithOneColumnAndSearch(pageNo, pageSize, search, sortBy));
+        } catch (Exception e) {
+            log.error("Error get users: {} {}", e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("user.get.fail"));
+        }
+    }
+
+    // Cách làm map với full field object không dùng các String firstName, lastName, ... vào params rồi viết query tốn time !!!
+    @Operation(summary = "Get information a user list order with one column and search with criteria", description = "API get list user and order list with one column and search with criteria!")
+    @GetMapping("/list-advance-search-with-criteria")
+    public ResponseData<PageResponse> advanceSearchByCriteria(@RequestParam(defaultValue = "0", required = false) int pageNo
+            , @Min(5) @RequestParam(defaultValue = "20", required = false) int pageSize
+            , @RequestParam(required = false) String sortBy // sort 1 cột thôi // tên đường ví dụ Tran thì query tới Address kiếm street like "%Tran%"
+            , @RequestParam(required = false) String street  // : code hiện tại search full field User nhưng chỉ dược 1 field của Address
+            , @RequestParam(required = false) String... search) { // email:email, id>8 , ...   //
+        System.out.println("Dang get users voi so trang: " + pageNo + ", so record: " + pageSize);
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.advanceSearchByCriteria(pageNo, pageSize, sortBy, street, search));
         } catch (Exception e) {
             log.error("Error get users: {} {}", e.getMessage(), e.getCause());
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("user.get.fail"));

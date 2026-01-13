@@ -55,6 +55,8 @@ GetUser list với nhiều tiêu chí:
 GetUser list với 1 tiêu dùng với EntityManager đê customize query
 `http://localhost:8080/user/list-order-with-multiple-columns-and-search?pageNo=0&pageSize=10&search=th&sortBy=id:asc`
 
+GetUser list với Criteria: sort 1 cột, search (truyền nhiều field của User), 1 field của cột đã join là Address 
+`http://localhost:8080/user/list-advance-search-with-criteria?pageNo=0&pageSize=10&sortBy=id:asc&address=Tran&search=email:email, id>8`
 ---
 
 Có thể truyền thêm header: Accept-Language: vi-VN ; en-US ; mx-MX
