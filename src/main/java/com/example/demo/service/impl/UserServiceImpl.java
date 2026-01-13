@@ -256,8 +256,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageResponse<?> getUserListOrderWithMultipleColumnsAndSearch(int pageNo, int pageSize, String search, String sortBy) {
-        return searchRepository.getUserListOrderWithMultipleColumnsAndSearch(pageNo, pageSize, search, sortBy);
+    public PageResponse<?> getUserListOrderWithOneColumnAndSearch(int pageNo, int pageSize, String search, String sortBy) {
+        return searchRepository.getUserListOrderWithOneColumnAndSearch(pageNo, pageSize, search, sortBy);
+    }
+
+    @Override
+    public PageResponse<?> advanceSearchByCriteria(int pageNo, int pageSize, String sortBy, String street, String... search) {
+        return searchRepository.advanceSearchUser(pageNo, pageSize, sortBy, street, search);
     }
 
 
