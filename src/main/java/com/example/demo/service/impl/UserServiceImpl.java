@@ -9,7 +9,10 @@ import com.example.demo.model.Address;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.custom.SearchRepository;
+import com.example.demo.repository.custom.specification.UserSpec;
+import com.example.demo.repository.custom.specification.UserSpecificationBuilder;
 import com.example.demo.service.UserService;
+import com.example.demo.util.Gender;
 import com.example.demo.util.UserStatus;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -208,7 +212,7 @@ public class UserServiceImpl implements UserService {
             page--;
         }
         List<Sort.Order> orders = new ArrayList<>();
-        if(Objects.nonNull(sorts)) {
+        if (Objects.nonNull(sorts)) {
             for (String sort : sorts) {
                 if (StringUtils.hasLength(sort)) {
                     Pattern pattern = Pattern.compile("(\\w+?)(:)(.*)");
@@ -263,6 +267,57 @@ public class UserServiceImpl implements UserService {
     @Override
     public PageResponse<?> advanceSearchByCriteria(int pageNo, int pageSize, String sortBy, String street, String... search) {
         return searchRepository.advanceSearchUser(pageNo, pageSize, sortBy, street, search);
+    }
+
+    @Override
+    public PageResponse advanceSearchWithSpecification(Pageable pageable, String[] user, String[] address) {
+
+        if (user != null && address != null) { // join table để tìm kiếm
+            return searchRepository.getUserJoinedAddress(pageable, user, address);
+        } else if (user != null) { // có đúng add null nên ko cần join tìm đúng user
+
+//            Specification<User> spec = UserSpec.hasFirstName("T");
+//            Specification<User> genderSpec = UserSpec.notEqualGender(Gender.MALE);
+//            Specification<User> finalSpec = spec.and(genderSpec);
+
+            UserSpecificationBuilder builder = new UserSpecificationBuilder();
+            Pattern pattern = Pattern.compile("(\\w+?)([<:>~!])(.*)(\\p{Punct}?)(\\p{Punct}?)");
+            for (String u : user) {
+                Matcher matcher = pattern.matcher(u);
+                if (matcher.find()) {
+                    builder.with(matcher.group(1), matcher.group(2)
+                            , matcher.group(3), matcher.group(4)
+                            , matcher.group(5));
+
+                }
+            }
+
+            Page<User> users = userRepository.findAll(builder.build(), pageable);
+            List<User> listUser = users.stream().toList();
+            List<UserResponse> userResponses = SearchRepository.getUsersIgnoreUserInAddresses(listUser);
+
+            long totalElements = users.getTotalElements();
+
+            return PageResponse.builder()
+                    .pageNo(pageable.getPageNumber())
+                    .pageSize(pageable.getPageSize())
+                    .totalElements(totalElements)
+                    .totalPages((int) Math.ceil(1.0 * totalElements / pageable.getPageSize()))
+                    .items(userResponses)
+                    .build();
+        }
+
+        Page<User> users = userRepository.findAll(pageable);
+        List<User> listUser = users.stream().toList();
+        List<UserResponse> userResponses = SearchRepository.getUsersIgnoreUserInAddresses(listUser);
+
+        return PageResponse.builder()
+                .pageNo(pageable.getPageNumber())
+                .pageSize(pageable.getPageSize())
+                .totalPages(users.getTotalPages())
+                .totalElements(users.getTotalElements())
+                .items(userResponses)
+                .build();
     }
 
 

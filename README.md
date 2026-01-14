@@ -56,7 +56,17 @@ GetUser list với 1 tiêu dùng với EntityManager đê customize query
 `http://localhost:8080/user/list-order-with-multiple-columns-and-search?pageNo=0&pageSize=10&search=th&sortBy=id:asc`
 
 GetUser list với Criteria: sort 1 cột, search (truyền nhiều field của User), 1 field của cột đã join là Address 
-`http://localhost:8080/user/list-advance-search-with-criteria?pageNo=0&pageSize=10&sortBy=id:asc&address=Tran&search=email:email, id>8`
+`http://localhost:8080/user/list-advance-search-with-specification?page=0&size=5&sort=id&user=firstName~a&address=city~a`
+
+GetUser list với Specification: sort của pageable, search nhiều field dựa vào speci join 2 column
+tự custom mấy toán tử và join 2 bảng thôi qua and hay or:
+đối với TH1: không truyền user and add thì dùng spring findAll với pageable là nó sort dùm
+tương tự TH2: với có mỗi user cũng dùng findAll với Spec và pageable và nó cũng sort dùm
+tuy nhiên TH3: với sort có cả add và user thì dùng entityManager nên phải custome từng cái
+thông qua pageable như page, size, sort: code có làm page size rồi nhưng sort chưa !!!
+bên dưới câu api rơi TH3 sort không ăn
+`http://localhost:8080/user/list-advance-search-with-specification?page=0&size=5&sort=id&user=firstName~a&address=city~a, street~T`
+
 
 ---
 

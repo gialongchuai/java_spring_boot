@@ -18,6 +18,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -156,7 +157,20 @@ public class UserController {
             return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.advanceSearchByCriteria(pageNo, pageSize, sortBy, street, search));
         } catch (Exception e) {
             log.error("Error get users: {} {}", e.getMessage(), e.getCause());
-            return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("user.get.fail"));
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("ux`x`x`ser.get.fail"));
+        }
+    }
+
+    @Operation(summary = "Advance search to get User list with specification", description = "API get list user with advance search specification!")
+    @GetMapping("/list-advance-search-with-specification")
+    public ResponseData<PageResponse> advanceSearchWithSpecification(Pageable pageable
+            , @RequestParam(required = false) String[] user
+            , @RequestParam(required = false) String[] address) {
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.advanceSearchWithSpecification(pageable, user, address));
+        } catch (Exception e) {
+            log.error("Error get users: {} {}", e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("ux`x`x`ser.get.fail"));
         }
     }
 }
