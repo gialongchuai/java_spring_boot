@@ -173,4 +173,18 @@ public class UserController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("ux`x`x`ser.get.fail"));
         }
     }
+
+    @Operation(summary = "Advance search to get User list with specification", description = "API get list user with advance search specification!")
+    @GetMapping("/testing-filter-filed-user-address")
+    public ResponseData<PageResponse> testingApiFilterUserAndAddress(
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String street
+    ) {
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("user.get.success"), userService.testingApiFilterUserAndAddress(lastName, street));
+        } catch (Exception e) {
+            log.error("Error get users: {} {}", e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), Translator.toLocale("ux`x`x`ser.get.fail"));
+        }
+    }
 }

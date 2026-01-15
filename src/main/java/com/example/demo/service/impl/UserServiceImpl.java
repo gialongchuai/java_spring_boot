@@ -9,11 +9,10 @@ import com.example.demo.model.Address;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.custom.SearchRepository;
-import com.example.demo.repository.custom.specification.UserSpec;
 import com.example.demo.repository.custom.specification.UserSpecificationBuilder;
 import com.example.demo.service.UserService;
-import com.example.demo.util.Gender;
 import com.example.demo.util.UserStatus;
+import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,8 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -39,6 +36,7 @@ public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
     SearchRepository searchRepository;
+    EmailServiceImpl emailService;
 
     @Override
     public Long saveUser(UserRequestDTO requestDTO) {
@@ -69,6 +67,13 @@ public class UserServiceImpl implements UserService {
         });
         User userRes = userRepository.save((user));
         log.info("User added successfully!");
+        try {
+            emailService.sendWelcomeEmail(userRes);
+        } catch (MessagingException e) {
+            // Xử lý lỗi gửi mail (log, retry, v.v.)
+            throw new RuntimeException("Gửi email thất bại", e);
+        }
+
         return userRes.getId();
     }
 
@@ -316,6 +321,15 @@ public class UserServiceImpl implements UserService {
                 .pageSize(pageable.getPageSize())
                 .totalPages(users.getTotalPages())
                 .totalElements(users.getTotalElements())
+                .items(userResponses)
+                .build();
+    }
+
+    @Override
+    public PageResponse testingApiFilterUserAndAddress(String lastName, String street) {
+        List<User> users = userRepository.findAllByLastNameAndStreet(lastName, street);
+        List<UserResponse> userResponses = SearchRepository.getUsersIgnoreUserInAddresses(users);
+        return PageResponse.builder()
                 .items(userResponses)
                 .build();
     }

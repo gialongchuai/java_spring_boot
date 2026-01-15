@@ -20,4 +20,5 @@ public interface UserService {
     PageResponse<?> getUserListOrderWithOneColumnAndSearch(int pageNo, int pageSize, String search, String sortBy);
     PageResponse<?> advanceSearchByCriteria(int pageNo, int pageSize, String sortBy, String street, String... search);
     PageResponse advanceSearchWithSpecification(Pageable pageable, String[] user, String[] address);
+    PageResponse testingApiFilterUserAndAddress(String lastName, String street);
 }
