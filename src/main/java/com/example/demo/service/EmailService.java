@@ -4,5 +4,5 @@ import com.example.demo.model.User;
 import jakarta.mail.MessagingException;
 
 public interface EmailService {
-    void sendWelcomeEmail(User user) throws MessagingException;
+    void sendWelcomeEmail(String email) throws MessagingException;
 }

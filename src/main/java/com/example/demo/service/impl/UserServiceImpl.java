@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -37,6 +38,8 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     SearchRepository searchRepository;
     EmailServiceImpl emailService;
+
+    KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
     public Long saveUser(UserRequestDTO requestDTO) {
@@ -67,11 +70,20 @@ public class UserServiceImpl implements UserService {
         });
         User userRes = userRepository.save((user));
         log.info("User added successfully!");
-        try {
-            emailService.sendWelcomeEmail(userRes);
-        } catch (MessagingException e) {
-            // Xử lý lỗi gửi mail (log, retry, v.v.)
-            throw new RuntimeException("Gửi email thất bại", e);
+
+        // === Cách 01 === Truyền thẳng qua send String bình thường : Tầm 4 5 s
+//        try {
+//            emailService.sendWelcomeEmail(userRes.getEmail());
+//        } catch (MessagingException e) {
+//            //   Xử lý lỗi gửi mail (log, retry, v.v.)
+//            throw new RuntimeException("Gửi email thất bại", e);
+//        }
+
+        // === Cách 02 === Kafka gửi topic : Truyền thông qua lắng nghe topic tốn khoản 800 ms
+        if (userRes != null) {
+            String messages = String.format("email:%s,id:%s,code:%s"
+                    , userRes.getEmail(), user.getId(), "code@123");
+            kafkaTemplate.send("confirm-account-topic", messages);
         }
 
         return userRes.getId();
