@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
     SearchRepository searchRepository;
     EmailServiceImpl emailService;
 
-    KafkaTemplate<String, String> kafkaTemplate;
+//    KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
     public Long saveUser(UserRequestDTO requestDTO) {
@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService {
         User userRes = userRepository.save((user));
         log.info("User added successfully!");
 
-        // === Cách 01 === Truyền thẳng qua send String bình thường : Tầm 4 5 s
+//        // === Cách 01 === Truyền thẳng qua send String bình thường : Tầm 4 5 s
 //        try {
 //            emailService.sendWelcomeEmail(userRes.getEmail());
 //        } catch (MessagingException e) {
@@ -79,12 +79,12 @@ public class UserServiceImpl implements UserService {
 //            throw new RuntimeException("Gửi email thất bại", e);
 //        }
 
-        // === Cách 02 === Kafka gửi topic : Truyền thông qua lắng nghe topic tốn khoản 800 ms
-        if (userRes != null) {
-            String messages = String.format("email:%s,id:%s,code:%s"
-                    , userRes.getEmail(), user.getId(), "code@123");
-            kafkaTemplate.send("confirm-account-topic", messages);
-        }
+//        // === Cách 02 === Kafka gửi topic : Truyền thông qua lắng nghe topic tốn khoản 800 ms
+//        if (userRes != null) {
+//            String messages = String.format("email:%s,id:%s,code:%s"
+//                    , userRes.getEmail(), user.getId(), "code@123");
+//            kafkaTemplate.send("confirm-account-topic", messages);
+//        }
 
         return userRes.getId();
     }

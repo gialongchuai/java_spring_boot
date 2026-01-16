@@ -27,18 +27,18 @@ public class EmailServiceImpl implements EmailService {
     private TemplateEngine templateEngine;
 
     @Override
-    @KafkaListener(topics = "confirm-account-topic", groupId = "confirm-account-group")
-    public void sendWelcomeEmail(String messages) throws MessagingException {
+//    @KafkaListener(topics = "confirm-account-topic", groupId = "confirm-account-group")
+    public void sendWelcomeEmail(String email) throws MessagingException {
 
         log.info("Sending mail ....");
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 
         // mess = "email:minhtan0949@gmail.com,id:70,code:code@123";
-        String[] cat = messages.split(",");
-        String email = cat[0].substring(cat[0].indexOf(':') + 1);
-        String id = cat[1].substring(cat[1].indexOf(':') + 1);
-        String code = cat[2].substring(cat[2].indexOf(':') + 1);
+//        String[] cat = messages.split(",");
+//        String email = cat[0].substring(cat[0].indexOf(':') + 1);
+//        String id = cat[1].substring(cat[1].indexOf(':') + 1);
+//        String code = cat[2].substring(cat[2].indexOf(':') + 1);
 
         helper.setTo(email);
         helper.setSubject("Chào mừng bạn đến với hệ thống!");

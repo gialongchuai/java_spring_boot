@@ -117,6 +117,47 @@ select * from public.tbl_user_has_group;
 select * from public.tbl_user_has_group;
 
 
+select * from tbl_user
+select * from tbl_address
+select * from tbl_role
+select * from tbl_group
+select * from tbl_permission
+select * from tbl_user_has_role
+select * from tbl_user_has_group
+select * from tbl_role_has_permission
+
+select * from tbl_user
+INSERT INTO tbl_user (id,last_name,first_name,date_of_birth,gender,phone,email,username,"password",status,"type",created_at,updated_at) VALUES
+10	"Tung"	"Dang Thanh"	"1989-05-06"	"MALE"	"0123456789"	"someone@email.com"	"user8"	"password"	"ACTIVE"	"USER"	"2024-04-18 09:56:29.231"	"2024-04-18 09:56:29.231"
+
+select * from tbl_address
+INSERT INTO tbl_address (id,apartment_number,floor,building,street_number,street,city,country,address_type,user_id,created_at,updated_at) VALUES
+1	"1"	"5"	"B1"	"101"	"Vo Nguyen Giap street"	"Hanoi"	"Vietnam"	1	1	"2024-04-15 21:54:04.274"	"2024-04-15 21:54:04.274"
+
+select * from tbl_role
+INSERT INTO tbl_role (id,"name") VALUES
+2	"admin"
+
+select * from tbl_group
+INSERT INTO tbl_group (id,"name",role_id) VALUES
+3	"Group Fronted"	4
+
+select * from tbl_permission
+INSERT INTO tbl_permission (id,"name") VALUES
+2	"View"
+
+select * from tbl_user_has_role
+INSERT INTO tbl_user_has_role (user_id,role_id) VALUES
+3	3
+
+select * from tbl_user_has_group
+INSERT INTO tbl_user_has_group (user_id,group_id) VALUES
+2	1
+
+select * from tbl_role_has_permission
+INSERT INTO tbl_role_has_permission (role_id,permission_id) VALUES
+1	1
+
 INSERT INTO tbl_user (id,last_name,first_name,date_of_birth,gender,phone,email,username,"password",status,"type",created_at,updated_at) VALUES
 	 (10,'Dang Thanh','Tung','1989-05-06','MALE','0123456789','someone@email.com','user8','password','ACTIVE','USER','2024-04-18 09:56:29.231','2024-04-18 09:56:29.231'),
 	 (11,'Nguyen Khac','Trung','1990-06-07','MALE','0123456789','someone@email.com','user9','password','ACTIVE','USER','2024-04-18 09:56:30.136','2024-04-18 09:56:30.136'),

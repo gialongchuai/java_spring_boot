@@ -43,7 +43,7 @@ Delete:
 GetUser:
 `http://localhost:8080/user/14`
 
-Phân trang với 3 cái get bên dưới:
+Phân trang với 5 cái get bên dưới:
 
 GetUser list với 1 tiêu chí:
 `http://localhost:8080/user/list?pageNo=1&pageSize=10&sortBy=lastName:asc`
@@ -66,6 +66,55 @@ tuy nhiên TH3: với sort có cả add và user thì dùng entityManager nên p
 thông qua pageable như page, size, sort: code có làm page size rồi nhưng sort chưa !!!
 bên dưới câu api rơi TH3 sort không ăn
 `http://localhost:8080/user/list-advance-search-with-specification?page=0&size=5&sort=id&user=firstName~a&address=city~a, street~T`
+
+---
+
+Mô hình RBAC : Role-Based Access Control
+Phân quyền dựa trên vai trò: outsourcing, ngân hàng, ...
+là cái mô hình đang code
+
+Mô hình ACL : Access Control List
+thương mại điện tử: AWS, ...
+
+phân tích xíu nè : RBAC
+
+Role:
+- "sysadmin" : người có quyền quản trị hệ thống: IT, phần cứng, .. quản trị toàn hệ thống.
+Nhưng không thay đổi các thao tác nghiệp vụ như thao tác sửa đổi bộ phận kế toán
+
+- "admin" : full quyền thao tác nghiệp vụ nhưng không có điều chỉnh đc thao tác hệ thống
+Ngược lại với anh ở trên, admin chỉ liên quan tới nghiệp vụ kinh doanh bộ phận ...
+CEO, tổng giám đốc 
+
+- "manager" : teamlead, trưởng bộ phận phòng ban
+
+- "user" : nhân viên thường xem thêm sửa nhung không dc xóa
+
+Permission:
+- "Full Access" : sysadmin thương có đủ hết
+
+- "View" : user view
+
+- "Add" : thêm bản ghi
+- "Update" : thêm bản ghi
+Thường outsorce không liên quan tài chính ngân hàng 2 cía là edit, thêm mới or hiểu là chỉnh sửa
+Còn tín dụng còn quy trình phê duyệt, chuyên viên tính dụng tạo ra hồ sơ vay vốn, hợp đồng
+Nhưng không có quyền approve (chấp thuận) vay hay ko cho vay, này phải có thẩm định viên, giám sát viên, manager
+nên tách ra update là trạng thái bản ghi approve
+
+- "Delete" : thường admin
+
+- "Upload" : thường admin cho user, manager tài liệu
+
+- "Import" : xử lý insert hàng loạt, insert file excel cho tải lên mà chưa kiểm soát tài liệu đó
+admin manager hoặc user ...
+
+- "Export" : bản báo cáo, excel : tổng kết báo cáo kinh doanh ai được xem
+manager, ceo. Cho phép ai được export, vay vốn thu chi công nợ
+
+- "Send"
+- "Share" : share mới send được, gán quyền cho xem sửa file ...
+
 
 
 ---

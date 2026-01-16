@@ -21,7 +21,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "tbl_user")
 @Entity(name = "User")
-public class User extends AbstractEntity {
+public class User extends AbstractEntity<Long> {
 
     @Column(name = "first_name")
     private String firstName;
@@ -60,9 +60,6 @@ public class User extends AbstractEntity {
     @Column(name = "status")
     private UserStatus status;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "user")
-    private Set<Address> addresses = new HashSet<>();
-
     public void saveAddress(Address address) {
         if (address != null) {
             if(Objects.isNull(addresses)) addresses = new HashSet<>(); // với address đầu tạo mới hass add sau đó mấy cái sau gán thêm vòa
@@ -70,4 +67,13 @@ public class User extends AbstractEntity {
             address.setUser(this); // save user_id
         }
     }
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
+    private Set<Address> addresses = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<GroupHasUser> groupHasUsers = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<UserHasRole> userHasRoles = new HashSet<>();
 }
