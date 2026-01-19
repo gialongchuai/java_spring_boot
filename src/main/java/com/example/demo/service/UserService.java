@@ -6,10 +6,14 @@ import com.example.demo.dto.response.UserResponse;
 import com.example.demo.util.UserStatus;
 import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
 
 public interface UserService {
+
+    UserDetailsService userDetailsService();
+
     Long saveUser(UserRequestDTO requestDTO);
     void updateUser(Long userId, UserRequestDTO requestDTO);
     void changeStatusUser(Long userId, UserStatus userStatus);
@@ -19,6 +23,6 @@ public interface UserService {
     PageResponse<?> getAllUsersOrderWithMultipleColumns(int pageNo, int pageSize, String... sorts);
     PageResponse<?> getUserListOrderWithOneColumnAndSearch(int pageNo, int pageSize, String search, String sortBy);
     PageResponse<?> advanceSearchByCriteria(int pageNo, int pageSize, String sortBy, String street, String... search);
-    PageResponse advanceSearchWithSpecification(Pageable pageable, String[] user, String[] address);
-    PageResponse testingApiFilterUserAndAddress(String lastName, String street);
+    PageResponse<?> advanceSearchWithSpecification(Pageable pageable, String[] user, String[] address);
+    PageResponse<?> testingApiFilterUserAndAddress(String lastName, String street);
 }

@@ -22,6 +22,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -38,8 +40,16 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     SearchRepository searchRepository;
     EmailServiceImpl emailService;
+//    PasswordEncoder passwordEncoder;
 
 //    KafkaTemplate<String, String> kafkaTemplate;
+
+    @Override
+    public UserDetailsService userDetailsService() {
+
+        // Cần impl UserDetails bên User model không ấy lỗi !!!
+        return username ->  userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("user.not.found")));
+    }
 
     @Override
     public Long saveUser(UserRequestDTO requestDTO) {
@@ -51,7 +61,7 @@ public class UserServiceImpl implements UserService {
                 .phone(requestDTO.getPhone())
                 .email(requestDTO.getEmail())
                 .username(requestDTO.getUsername())
-                .password(requestDTO.getPassword())
+                .password((requestDTO.getPassword()))
                 .status(requestDTO.getStatus())
                 .type(requestDTO.getType())
 //                .addresses(convertToAddress(requestDTO.getAddresses()))
@@ -287,7 +297,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageResponse advanceSearchWithSpecification(Pageable pageable, String[] user, String[] address) {
+    public PageResponse<?> advanceSearchWithSpecification(Pageable pageable, String[] user, String[] address) {
 
         if (user != null && address != null) { // join table để tìm kiếm
             return searchRepository.getUserJoinedAddress(pageable, user, address);
@@ -338,7 +348,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageResponse testingApiFilterUserAndAddress(String lastName, String street) {
+    public PageResponse<?> testingApiFilterUserAndAddress(String lastName, String street) {
         List<User> users = userRepository.findAllByLastNameAndStreet(lastName, street);
         List<UserResponse> userResponses = SearchRepository.getUsersIgnoreUserInAddresses(users);
         return PageResponse.builder()
