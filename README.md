@@ -114,8 +114,98 @@ manager, ceo. Cho phép ai được export, vay vốn thu chi công nợ
 
 - "Send"
 - "Share" : share mới send được, gán quyền cho xem sửa file ...
+  Khi bạn tích hợp Spring Security vào ứng dụng Spring Boot và sử dụng JWT (JSON Web Token) để xác thực stateless, toàn bộ luồng xử lý sẽ diễn ra theo một trình tự rất rõ ràng. Dưới đây là phân tích chi tiết từng bước, từ lúc người dùng gửi yêu cầu đăng nhập cho đến khi gọi một API được bảo vệ bằng token.
 
+---
 
+1. Giai đoạn 1: Đăng nhập – Gửi username và password đến /auth/access
+   Người dùng gửi một yêu cầu POST đến endpoint /auth/access kèm theo username và password:
+   POST /auth/access
+   {
+   "username": "sysadmin",
+   "password": "123456"
+   }
+   Bước 1.1: Controller nhận request
+   Controller gọi service AuthenticationService.authenticate() để xử lý đăng nhập.
+
+Bước 1.2: Xác thực thông qua AuthenticationManager
+Trong service, bạn tạo một đối tượng UsernamePasswordAuthenticationToken chứa username và password, rồi truyền vào authenticationManager.authenticate(). Đây là cách chuẩn để kích hoạt cơ chế xác thực của Spring Security.
+
+Spring Security sẽ tìm AuthenticationProvider phù hợp — trong trường hợp này là DaoAuthenticationProvider mà bạn đã cấu hình trong bean provider().
+
+Bước 1.3: DaoAuthenticationProvider gọi UserDetailsService
+DaoAuthenticationProvider tự động gọi phương thức loadUserByUsername(username) trên UserDetailsService mà bạn đã cung cấp. Cụ thể, bạn đã implement UserDetailsService như sau:
+return username -> userRepository.findByUsername(username).orElseThrow(...);
+→ Điều này dẫn đến lần truy vấn cơ sở dữ liệu đầu tiên:
+SELECT ... FROM tbl_user WHERE username = 'sysadmin'
+Kết quả trả về là một đối tượng UserDetails chứa thông tin người dùng, bao gồm mật khẩu đã được mã hóa.
+
+Bước 1.4: So sánh mật khẩu
+Spring Security sử dụng PasswordEncoder (mà bạn đã cấu hình) để so sánh mật khẩu người dùng gửi lên với mật khẩu đã mã hóa trong cơ sở dữ liệu. Nếu khớp, quá trình xác thực thành công và trả về một đối tượng Authentication đã được xác thực.
+
+Bước 1.5: Truy vấn dư thừa (nếu có)
+Trong code hiện tại của bạn, sau khi xác thực thành công, bạn lại gọi:
+userRepository.findByUsername(username)
+→ Điều này gây ra lần truy vấn thứ hai đến cơ sở dữ liệu với cùng điều kiện. Đây là truy vấn dư thừa, vì bạn hoàn toàn có thể lấy thông tin người dùng từ Authentication.getPrincipal() thay vì truy vấn lại.
+
+Bước 1.6: Tạo và trả về JWT token
+Sau khi có thông tin người dùng, bạn tạo một JWT token (thường chứa username hoặc userId trong phần subject) và trả về cho client.
+
+→ Kết thúc giai đoạn đăng nhập: client có token, server không lưu session (vì bạn dùng SessionCreationPolicy.STATELESS).
+2. Giai đoạn 2: Gọi API được bảo vệ – Gửi token đến /user/1
+   Người dùng gửi yêu cầu GET đến /user/1 kèm theo token trong header:
+   GET /user/1
+   Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+   Bước 2.1: Spring Security kiểm tra quyền truy cập
+   Do endpoint /user/1 không nằm trong danh sách WHITE_LIST, Spring Security yêu cầu xác thực. Trước khi vào controller, request sẽ đi qua chuỗi các filter.
+
+Bạn đã cấu hình:
+.addFilterBefore(preFilter, UsernamePasswordAuthenticationFilter.class);
+→ Do đó, PreFilter luôn được gọi trước cho mọi request (kể cả request không có token).
+
+Bước 2.2: PreFilter xử lý token
+Trong PreFilter.doFilterInternal():
+
+Lấy giá trị từ header Authorization.
+Nếu header rỗng hoặc không bắt đầu bằng "Bearer ", filter sẽ bỏ qua và chuyển tiếp request. Lúc này, nếu endpoint yêu cầu xác thực, Spring Security sẽ chặn và trả về lỗi 401.
+Nếu có token hợp lệ, filter sẽ:
+Trích xuất username từ phần subject của JWT.
+Kiểm tra xem SecurityContext hiện tại đã có thông tin xác thực chưa (để tránh ghi đè).
+Gọi UserDetailsService.loadUserByUsername(username) → lần truy vấn thứ ba đến cơ sở dữ liệu:
+
+SELECT ... FROM tbl_user WHERE username = 'sysadmin'
+Xác minh tính hợp lệ của token (thời hạn, chữ ký...).
+Nếu hợp lệ, tạo đối tượng Authentication và lưu vào SecurityContextHolder.
+→ Từ thời điểm này, trong suốt vòng đời của request này, Spring Security biết ai đang gọi API.
+
+Bước 2.3: Vào controller
+Sau khi PreFilter hoàn tất, request được chuyển tiếp đến controller /user/1.
+
+Controller gọi:
+userService.getUser(1L)
+→ Bên trong, service gọi:
+
+userRepository.findById(1L)
+
+→ Lần truy vấn thứ tư:
+
+SELECT ... FROM tbl_user WHERE id = 1
+
+Bước 2.4: Serialize phản hồi và lazy load
+Entity User của bạn có quan hệ với Address (có thể là @OneToMany với FetchType.LAZY). Khi Jackson serialize đối tượng User ra JSON, nó sẽ gọi getter getAddresses(), từ đó kích hoạt lazy load.
+
+→ Lần truy vấn thứ năm:
+SELECT ... FROM tbl_address WHERE user_id = 1
+3. Tổng kết toàn bộ luồng
+   Mỗi request có token đều đi qua PreFilter, kể cả request đầu tiên hay thứ N.
+   Không có khái niệm “lần đầu không kèm token được thông qua” — nếu endpoint yêu cầu xác thực, thì bắt buộc phải có token hợp lệ.
+   Các request nằm trong WHITE_LIST (như /auth/access, /swagger-ui/**) sẽ không bị chặn, dù có hay không có token.
+   Với cấu hình hiện tại, tổng cộng có 5 lần truy vấn cơ sở dữ liệu cho 2 request (1 login + 1 gọi API):
+   Xác thực login (bắt buộc)
+   Truy vấn dư thừa khi login
+   Load user từ token trong PreFilter
+   Load user theo ID trong controller
+   Lazy load địa chỉ khi serialize
 
 ---
 

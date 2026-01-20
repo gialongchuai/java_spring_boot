@@ -26,16 +26,20 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public TokenResponse authenticate(SignInRequest signInRequest) {
+        // authen này là 1 câu truy vấn
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInRequest.getUsername(), signInRequest.getPassword()));
 
+        // làm thêm 1 câu truy vấn nữa
         var user = userRepository.findByUsername(signInRequest.getUsername()).orElseThrow(()
                 -> new ResourceNotFoundException(Translator.toLocale("username.password.incorrect")));
 
         // Token access
-        String access_token = jwtService.generateToken(user);
+        String access_token = jwtService.generateAccessToken(user);
+
+        String refresh_token = jwtService.generateRefreshToken(user);
         return TokenResponse.builder()
                 .accessToken(access_token)
-                .refreshToken("refresh-token")
+                .refreshToken(refresh_token)
                 .userId(user.getId())
                 .build();
     }
