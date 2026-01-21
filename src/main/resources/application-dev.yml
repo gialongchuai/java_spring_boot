@@ -26,6 +26,7 @@ open:
     serverName: Server Dev
 
 jwt:
-  secretKey: ${secretKey:b56wVKNjCBV14RqvpGAecIkb9+VtS+FLhHicaxRXlwk=}
+  accessKey: ${accessKey:b56wVKNjCBV14RqvpGAecIkb9+VtS+FLhHicaxRXlwk=}
+  refreshKey: ${refreshKey:u04FsVPjRmoGsRq7QKyvGOuF018HI8EFTyH4C0ygYlM=}
   expiryHour: 1   # 1 hour
   expiryDay: 10   # 10 days

@@ -2,6 +2,7 @@ package com.example.demo.configuration;
 
 import com.example.demo.service.JwtService;
 import com.example.demo.service.UserService;
+import com.example.demo.util.TokenType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -53,14 +54,14 @@ public class PreFilter extends OncePerRequestFilter {
         log.info("Token: {}", token); // Token: eyJhbGciOiJIUzI1NiJ9...
 
         // Lấy username thông qua subject token
-        final String username = jwtService.extractUsername(token);
+        final String username = jwtService.extractUsername(token, TokenType.ACCESS_TOKEN);
         log.info("Username: {}", username); // sername: sysadmin
 
         if(StringUtils.isNotEmpty(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             // Mỗi lần 1 request là 1 lần gội tới db truy vấn thông qua username trả về userDetails
             UserDetails userDetails = userService.userDetailsService().loadUserByUsername(username);
-            if(jwtService.isValid(token, userDetails)) {
+            if(jwtService.isValid(token, TokenType.ACCESS_TOKEN, userDetails)) {
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

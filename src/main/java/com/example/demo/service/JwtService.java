@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.util.TokenType;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface JwtService {
@@ -9,7 +10,7 @@ public interface JwtService {
 
     String generateRefreshToken(UserDetails userDetails);
 
-    String extractUsername(String token);
+    String extractUsername(String token, TokenType type);
 
-    boolean isValid(String token, UserDetails userDetails);
+    boolean isValid(String token, TokenType tokenType, UserDetails userDetails);
 }
