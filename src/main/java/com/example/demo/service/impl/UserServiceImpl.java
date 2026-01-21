@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     SearchRepository searchRepository;
     EmailServiceImpl emailService;
-//    PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
 
 //    KafkaTemplate<String, String> kafkaTemplate;
 
@@ -53,6 +53,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Long saveUser(UserRequestDTO requestDTO) {
+        if(userRepository.existsByUsername(requestDTO.getUsername())) {
+            throw new ResourceNotFoundException("username is existed!");
+        }
+
         User user = User.builder()
                 .firstName(requestDTO.getFirstName())
                 .lastName(requestDTO.getLastName())
@@ -61,7 +65,7 @@ public class UserServiceImpl implements UserService {
                 .phone(requestDTO.getPhone())
                 .email(requestDTO.getEmail())
                 .username(requestDTO.getUsername())
-                .password((requestDTO.getPassword()))
+                .password(passwordEncoder.encode((requestDTO.getPassword())))
                 .status(requestDTO.getStatus())
                 .type(requestDTO.getType())
 //                .addresses(convertToAddress(requestDTO.getAddresses()))

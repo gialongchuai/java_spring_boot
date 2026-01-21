@@ -29,6 +29,7 @@ public class AppConfig implements WebMvcConfigurer {
     UserService userService;
     PreFilter preFilter;
     String[] WHITE_LIST = {"/auth/**"};
+    PasswordEncoder passwordEncoder;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -39,11 +40,6 @@ public class AppConfig implements WebMvcConfigurer {
                 .allowCredentials(true);
     }
 
-    // Mã hóa mật khẩu password
-    @Bean
-    public PasswordEncoder getPasswordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 
     // Sau khi thêm depen security thì swagger yêu cầu phải username + password
     @Bean
@@ -90,7 +86,7 @@ public class AppConfig implements WebMvcConfigurer {
     @Bean
     public AuthenticationProvider provider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userService.userDetailsService());
-        provider.setPasswordEncoder(getPasswordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
 
         return provider;
     }

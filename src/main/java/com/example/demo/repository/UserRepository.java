@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     @Query("SELECT u FROM User u INNER JOIN u.addresses a WHERE u.lastName LIKE %:lastName% AND a.street LIKE %:street% order by u.id desc")
     List<User> findAllByLastNameAndStreet(String lastName, String street);
+
+    boolean existsByUsername(String username);
 }
