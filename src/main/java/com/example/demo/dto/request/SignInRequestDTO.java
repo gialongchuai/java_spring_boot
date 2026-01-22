@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SignInRequest {
+public class SignInRequestDTO {
 
     @NotBlank(message = "username must be not blank!")
     private String username;

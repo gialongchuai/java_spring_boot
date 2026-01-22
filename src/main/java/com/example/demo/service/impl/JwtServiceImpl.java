@@ -1,5 +1,7 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.model.User;
 import com.example.demo.service.JwtService;
 import com.example.demo.util.TokenType;
 import io.jsonwebtoken.Claims;
@@ -33,6 +35,9 @@ public class JwtServiceImpl implements JwtService {
     @Value("${jwt.refreshKey}")
     private String refreshKey;
 
+    @Value("${jwt.resetKey}")
+    private String resetKey;
+
     @Override
     public String generateAccessToken(UserDetails userDetails) {
         return generateAccessToken(new HashMap<>(), userDetails);
@@ -41,6 +46,11 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String generateRefreshToken(UserDetails userDetails) {
         return generateRefreshToken(new HashMap<>(), userDetails);
+    }
+
+    @Override
+    public String generateResetToken(User user) {
+        return generateResetToken(new HashMap<>(), user);
     }
 
     @Override
@@ -87,12 +97,23 @@ public class JwtServiceImpl implements JwtService {
                 .compact();
     }
 
+    private String generateResetToken(Map<String, Object> claims, UserDetails userDetails) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + (1000 * 60 * 60)))
+                .signWith(getKey(TokenType.RESET_TOKEN), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     private Key getKey(TokenType type) {
         byte[] keyBytes;
-        if (TokenType.ACCESS_TOKEN.equals(type)) {
-            keyBytes = Decoders.BASE64.decode(accessKey); // lấy và giải mã accessKey
-        } else {
-            keyBytes = Decoders.BASE64.decode(refreshKey);
+        switch (type) {
+            case ACCESS_TOKEN -> keyBytes = Decoders.BASE64.decode(accessKey);
+            case REFRESH_TOKEN -> keyBytes = Decoders.BASE64.decode(refreshKey);
+            case RESET_TOKEN -> keyBytes = Decoders.BASE64.decode(resetKey);
+            default -> throw new ResourceNotFoundException("Token type is invalid!");
         }
         return Keys.hmacShaKeyFor(keyBytes);
     }

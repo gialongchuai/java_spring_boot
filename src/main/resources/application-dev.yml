@@ -28,5 +28,6 @@ open:
 jwt:
   accessKey: ${accessKey:b56wVKNjCBV14RqvpGAecIkb9+VtS+FLhHicaxRXlwk=}
   refreshKey: ${refreshKey:u04FsVPjRmoGsRq7QKyvGOuF018HI8EFTyH4C0ygYlM=}
+  resetKey: ${resetKey:9d501d8c1fbdaed53457b6951e1c774db632fe896a55a524d94690b9c5223fb3}
   expiryHour: 1   # 1 hour
   expiryDay: 10   # 10 days

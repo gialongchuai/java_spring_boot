@@ -1,8 +1,10 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.configuration.Translator;
-import com.example.demo.dto.request.SignInRequest;
-import com.example.demo.dto.response.ResponseError;
+import com.example.demo.dto.request.EmailForgotPasswordDTO;
+import com.example.demo.dto.request.ResetPasswordRequestDTO;
+import com.example.demo.dto.request.SignInRequestDTO;
+import com.example.demo.dto.request.TokenResetPasswordDTO;
 import com.example.demo.dto.response.TokenResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Token;
@@ -18,10 +20,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -35,11 +36,12 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 public class AuthenticationServiceImpl implements AuthenticationService {
     UserRepository userRepository;
     AuthenticationManager authenticationManager;
-    JwtService jwtService;
+    JwtServiceImpl jwtService;
     TokenService tokenService;
+    PasswordEncoder passwordEncoder;
 
     @Override
-    public TokenResponse authenticate(SignInRequest signInRequest) {
+    public TokenResponse authenticate(SignInRequestDTO signInRequest) {
         // authen này là 1 câu truy vấn
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInRequest.getUsername(), signInRequest.getPassword()));
 
@@ -110,5 +112,63 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         tokenService.delete(tokenByUsername);
 
         return "Deleted!";
+    }
+
+    // ======================= FORGOT PASSWORD =======================
+    @Override
+    public String forgotPassword(EmailForgotPasswordDTO request) {
+        User user = userRepository.findByEmail(request.getEmail());
+        if(!user.isEnabled()) {{
+            throw new ResourceNotFoundException("User is inactive");
+        }}
+
+        String resetToken = jwtService.generateResetToken(user);
+        String formConfirmEmail = String.format("curl --location 'http://localhost:8080/auth/reset-password' \\\n" +
+                "--header 'accept: */*' \\\n" +
+                "--header 'Content-Type: application/json' \\\n" +
+                "--header 'Accept-Language: vi-VN' \\\n" +
+                "--data '{\n" +
+                "    \"token\": \"%s\"\n" +
+                "}'", resetToken);
+        System.out.println(formConfirmEmail);
+        return "Sent!";
+    }
+
+    @Override
+    public String resetPassword(TokenResetPasswordDTO tokenResetPassword) {
+        final String secretKey = tokenResetPassword.getToken();
+        final String username = jwtService.extractUsername(secretKey, TokenType.RESET_TOKEN);
+        Optional<User> user = userRepository.findByUsername(username);
+        if(!jwtService.isValid(secretKey, TokenType.RESET_TOKEN, user.get())) {
+            throw new ResourceNotFoundException("Token is invalid!");
+        }
+        return "Reset!";
+    }
+
+    @Override
+    public String changePassword(ResetPasswordRequestDTO requestDTO) {
+        User user = isValidToken(requestDTO.getSecretKey());
+
+        if(!requestDTO.getNewPassword().equals(requestDTO.getConfirmNewPassword())) {
+            throw new ResourceNotFoundException("Confirm Password is false!");
+        }
+        user.setPassword(passwordEncoder.encode(requestDTO.getNewPassword()));
+        userRepository.save(user);
+
+        return "Change password successfully!";
+    }
+
+    private User isValidToken(String secretKey) {
+        final String username = jwtService.extractUsername(secretKey, TokenType.RESET_TOKEN);
+        User user = userRepository.findByUsernameEntity(username);
+
+        if(!user.isEnabled()) {{
+            throw new ResourceNotFoundException("User is inactive");
+        }}
+        if(!jwtService.isValid(secretKey, TokenType.RESET_TOKEN, user)) {
+            throw new ResourceNotFoundException("Token is invalid!");
+        }
+
+        return user;
     }
 }
