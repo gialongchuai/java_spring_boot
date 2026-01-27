@@ -39,7 +39,8 @@ public class AuthenticationController {
     // chứ không được dùng REFRESH
     @Operation(summary = "user login", description = "API login user!")
     @PostMapping("/access")
-    public ResponseData<TokenResponse> login(@RequestBody SignInRequestDTO signInRequest) {
+    public ResponseData<TokenResponse> login(@RequestBody SignInRequestDTO signInRequest, HttpServletRequest httpRequest) {
+        System.out.println(httpRequest);
         try {
             return new ResponseData<>(HttpStatus.OK.value(), Translator.toLocale("auth.login.authenticated"), authenticationService.authenticate(signInRequest));
         } catch (Exception e) {

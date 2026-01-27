@@ -1,5 +1,6 @@
 package com.example.demo.configuration;
 
+import com.example.demo.service.CustomUserDetailsService;
 import com.example.demo.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -26,7 +28,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class AppConfig implements WebMvcConfigurer {
 
-    UserService userService;
+    CustomUserDetailsService customUserDetailsService;
     PreFilter preFilter;
     String[] WHITE_LIST = {"/auth/**"};
     PasswordEncoder passwordEncoder;
@@ -85,7 +87,7 @@ public class AppConfig implements WebMvcConfigurer {
     // Cho user impl UserDetail của spring security
     @Bean
     public AuthenticationProvider provider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userService.userDetailsService());
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
 
         return provider;

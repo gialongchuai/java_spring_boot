@@ -12,8 +12,6 @@ import java.util.List;
 
 public interface UserService {
 
-    UserDetailsService userDetailsService();
-
     Long saveUser(UserRequestDTO requestDTO);
     void updateUser(Long userId, UserRequestDTO requestDTO);
     void changeStatusUser(Long userId, UserStatus userStatus);

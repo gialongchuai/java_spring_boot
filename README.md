@@ -18,6 +18,13 @@ bằng lệnh `mvn package -P test || mvn clean package -P dev
 || mvn clean package -P dev` hoặc hình như `mvn clean package -P test, dev` được luôn 
 Có thể `ngoại trừ môi trường dev` như `mvn clean package -P !dev`
 
+`P6Spy` giúp log dễ xem hơn, ta cần tại ra file `spy.properties`, thêm vào `application-dev.yml` và config 
+cho file `CompactSqlFormatter` trong package `config`
+ex: `[SQL]
+ExecutionTime: 3ms | Connection: 0 | UserServiceImpl.saveUser:85 |
+insert into tbl_address (address_type,apartment_number,building,city,country,created_at,created_by,floor,street,street_number,updated_at,updated_by,user_id) values (1,'K13','Sunrise City','Ho Chi Minh','Vietnam','2026-01-27T08:26:12.382+0700',NULL,'12','Nguyen Huu Tho','123','2026-01-27T08:26:12.382+0700',NULL,70)
+`
+
 Code có kèm document cho swagger thông qua link: http://localhost:8080/swagger-ui/index.html
 Với depen openai có kèm swagger trong đó
 Từ đó có thể convert qua postman bằng cách bấm vào từ `/v3/api-docs/api-service-1`

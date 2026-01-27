@@ -1,5 +1,6 @@
 package com.example.demo.configuration;
 
+import com.example.demo.service.CustomUserDetailsService;
 import com.example.demo.service.JwtService;
 import com.example.demo.service.UserService;
 import com.example.demo.util.TokenType;
@@ -30,6 +31,7 @@ import java.io.IOException;
 public class PreFilter extends OncePerRequestFilter {
     JwtService jwtService;
     UserService userService;
+    CustomUserDetailsService customUserDetailsService;
 
     // nhận request trc khi vào api -> hứng
     // nhưng đối api nằm trong white list không cần token ví dụ auth
@@ -60,7 +62,7 @@ public class PreFilter extends OncePerRequestFilter {
         if(StringUtils.isNotEmpty(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             // Mỗi lần 1 request là 1 lần gội tới db truy vấn thông qua username trả về userDetails
-            UserDetails userDetails = userService.userDetailsService().loadUserByUsername(username);
+            UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
             if(jwtService.isValid(token, TokenType.ACCESS_TOKEN, userDetails)) {
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

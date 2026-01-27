@@ -45,13 +45,6 @@ public class UserServiceImpl implements UserService {
 //    KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
-    public UserDetailsService userDetailsService() {
-
-        // Cần impl UserDetails bên User model không ấy lỗi !!!
-        return username ->  userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("user.not.found")));
-    }
-
-    @Override
     public Long saveUser(UserRequestDTO requestDTO) {
         if(userRepository.existsByUsername(requestDTO.getUsername())) {
             throw new ResourceNotFoundException("username is existed!");
