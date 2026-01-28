@@ -1,18 +1,19 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.configuration.Translator;
+import com.example.demo.dto.request.AddressRequestDTO;
 import com.example.demo.dto.request.UserRequestDTO;
 import com.example.demo.dto.response.PageResponse;
 import com.example.demo.dto.response.UserResponse;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Address;
 import com.example.demo.model.User;
+import com.example.demo.repository.AddressRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.custom.SearchRepository;
 import com.example.demo.repository.custom.specification.UserSpecificationBuilder;
 import com.example.demo.service.UserService;
 import com.example.demo.util.UserStatus;
-import jakarta.mail.MessagingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,10 +22,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -38,6 +38,8 @@ import java.util.regex.Pattern;
 public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
+    AddressRepository addressRepository;
+
     SearchRepository searchRepository;
     EmailServiceImpl emailService;
     PasswordEncoder passwordEncoder;
@@ -45,8 +47,9 @@ public class UserServiceImpl implements UserService {
 //    KafkaTemplate<String, String> kafkaTemplate;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long saveUser(UserRequestDTO requestDTO) {
-        if(userRepository.existsByUsername(requestDTO.getUsername())) {
+        if (userRepository.existsByUsername(requestDTO.getUsername())) {
             throw new ResourceNotFoundException("username is existed!");
         }
 
@@ -61,21 +64,28 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode((requestDTO.getPassword())))
                 .status(requestDTO.getStatus())
                 .type(requestDTO.getType())
-//                .addresses(convertToAddress(requestDTO.getAddresses()))
                 .build();
-        requestDTO.getAddresses().forEach(address -> {
-            user.saveAddress(Address.builder()
-                    .apartmentNumber(address.getApartmentNumber())
-                    .floor(address.getFloor())
-                    .building(address.getBuilding())
-                    .streetNumber(address.getStreetNumber())
-                    .street(address.getStreet())
-                    .city(address.getCity())
-                    .country(address.getCountry())
-                    .addressType(address.getAddressType())
-                    .build());
-        });
         User userRes = userRepository.save((user));
+
+        if (userRes.getId() != null) {
+            List<Address> addresses = new ArrayList<>();
+            for (AddressRequestDTO addressRequestDTO : requestDTO.getAddresses()) {
+                Address address = Address.builder()
+                        .apartmentNumber(addressRequestDTO.getApartmentNumber())
+                        .floor(addressRequestDTO.getFloor())
+                        .building(addressRequestDTO.getBuilding())
+                        .streetNumber(addressRequestDTO.getStreetNumber())
+                        .street(addressRequestDTO.getStreet())
+                        .city(addressRequestDTO.getCity())
+                        .country(addressRequestDTO.getCountry())
+                        .addressType(addressRequestDTO.getAddressType())
+                        .build();
+                address.setUser(userRes);
+                addresses.add(address);
+            }
+            addressRepository.saveAll(addresses);
+            log.info("Addresses of user added successfully!");
+        }
         log.info("User added successfully!");
 
 //        // === Cách 01 === Truyền thẳng qua send String bình thường : Tầm 4 5 s
@@ -114,6 +124,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateUser(Long userId, UserRequestDTO requestDTO) {
         User user = getUserById(userId);
         user.setFirstName(requestDTO.getFirstName());
@@ -126,23 +137,40 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
         user.setStatus(requestDTO.getStatus());
         user.setType(requestDTO.getType());
-        user.setAddresses(convertToAddress(requestDTO.getAddresses()));
-
-//        requestDTO.getAddresses().forEach(address -> {
-//            user.saveAddress(Address.builder()
-//                    .apartmentNumber(address.getApartmentNumber())
-//                    .floor(address.getFloor())
-//                    .building(address.getBuilding())
-//                    .streetNumber(address.getStreetNumber())
-//                    .street(address.getStreet())
-//                    .city(address.getCity())
-//                    .country(address.getCountry())
-//                    .addressType(address.getAddressType())
-//                    .build());
-//        });
 
         userRepository.save(user);
-        log.info("Updated user successfully!");
+        log.info("Updated user without address!");
+
+        List<Address> addresses = new ArrayList<>();
+
+        requestDTO.getAddresses().forEach(address -> {
+
+            // Lấy ra ds add xem xem id và type đã tồn tại chưa
+            // nếu tồn tại thì set lại giá trị mới
+            // nếu chưa tồn tại loại đó tạo mới add
+            // thêm all adds vào list xong saveAll lại hết !!!
+            Address addressDTO = addressRepository.findByUserIdAndAddressType(user.getId(), address.getAddressType());
+
+            if (addressDTO == null) {
+                addressDTO = new Address();
+            }
+            addressDTO.setApartmentNumber(address.getApartmentNumber());
+            addressDTO.setFloor(address.getFloor());
+            addressDTO.setBuilding(address.getBuilding());
+            addressDTO.setStreetNumber(address.getStreetNumber());
+            addressDTO.setStreet(address.getStreet());
+            addressDTO.setCity(address.getCity());
+            addressDTO.setCountry(address.getCountry());
+            addressDTO.setAddressType(address.getAddressType());
+
+            // Set lại user quan trọng nhất !!!
+            addressDTO.setUser(user);
+
+            addresses.add(addressDTO);
+        });
+
+        addressRepository.saveAll(addresses);
+        log.info("All success!");
     }
 
     @Override
@@ -155,7 +183,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long userId) {
-        userRepository.deleteById(userId);
+        // xóa mềm
+//        userRepository.deleteById(userId);
+
+        User user = getUserById(userId);
+        user.setStatus(UserStatus.INACTIVE);
+
+        userRepository.save(user);
         log.info("Deleted user successfully!");
     }
 
@@ -173,7 +207,7 @@ public class UserServiceImpl implements UserService {
                 .password(user.getPassword())
                 .status(user.getStatus())
                 .type(user.getType())
-                .addresses(convertToAddress(user.getAddresses()))
+//                .addresses(convertToAddress(user.getAddresses()))
                 .build();
         return userResponse;
     }

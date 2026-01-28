@@ -5,6 +5,12 @@ Sau đó login web với localhost chỉ định postgre trong thông tin trong 
 Tiếp tục tạo mới database trên postgresql với file `postgresql.sql`
 dán nội dung vào chạy ra bảng.
 
+Phím tắt:
+    + tìm kiếm nhanh: ctrl + shift + f
+    + chọn nhiều từ giống: alt + j
+    + format code: ctrl + alt + l
+    + loại bỏ code không dùng: ctrl + alt + o
+
 FIle `call_api_cors.html` để chạy thử cors trên fe call tới api back test...
 File `application.yml` có:
 `

@@ -59,16 +59,8 @@ public class User extends AbstractEntity<Long> implements UserDetails {
     @Column(name = "status")
     private UserStatus status;
 
-    public void saveAddress(Address address) {
-        if (address != null) {
-            if(Objects.isNull(addresses)) addresses = new HashSet<>(); // với address đầu tạo mới hass add sau đó mấy cái sau gán thêm vòa
-            addresses.add(address); // không có dòng trên là nó lưu đúng cái address cuối
-            address.setUser(this); // save user_id
-        }
-    }
-
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
-    private Set<Address> addresses = new HashSet<>();
+    private List<Address> addresses = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     private Set<GroupHasUser> groupHasUsers = new HashSet<>();
@@ -98,6 +90,6 @@ public class User extends AbstractEntity<Long> implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return UserStatus.ACTIVE.equals(status);
     }
 }

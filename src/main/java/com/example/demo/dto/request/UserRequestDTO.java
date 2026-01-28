@@ -9,15 +9,15 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import javax.xml.crypto.Data;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @ToString
@@ -45,5 +45,5 @@ public class UserRequestDTO {
 
     private UserStatus status;
 
-    private Set<Address> addresses = new HashSet<>();
+    private List<AddressRequestDTO> addresses;
 }
