@@ -4,20 +4,17 @@ import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.User;
 import com.example.demo.service.JwtService;
 import com.example.demo.util.TokenType;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
@@ -39,23 +36,32 @@ public class JwtServiceImpl implements JwtService {
     private String resetKey;
 
     @Override
-    public String generateAccessToken(UserDetails userDetails) {
-        return generateAccessToken(new HashMap<>(), userDetails);
+    public String generateAccessToken(Long userId, String username, Set<String> authorities) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("role", authorities);
+        return generateAccessToken(claims, username);
     }
 
     @Override
-    public String generateRefreshToken(UserDetails userDetails) {
-        return generateRefreshToken(new HashMap<>(), userDetails);
+    public String generateRefreshToken(Long userId, String username, Set<String> authorities) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("role", authorities);
+        return generateRefreshToken(claims, username);
     }
 
     @Override
-    public String generateResetToken(User user) {
-        return generateResetToken(new HashMap<>(), user);
+    public String generateResetToken(Long userId, String username, Set<String> authorities) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("role", authorities);
+        return generateResetToken(claims, username);
     }
 
     @Override
     public String extractUsername(String token, TokenType type) {
-        return extractClaims(token,type, Claims::getSubject);
+        return extractClaims(token, type, Claims::getSubject);
     }
 
     // Valid cho token trong preFilter trước khi vào các request
@@ -77,30 +83,30 @@ public class JwtServiceImpl implements JwtService {
         return extractClaims(token, type, Claims::getExpiration);
     }
 
-    private String generateAccessToken(Map<String, Object> claims, UserDetails userDetails) {
+    private String generateAccessToken(Map<String, Object> claims, String username) {
         return Jwts.builder()
                 .setClaims(claims) // những thông tin payload không muốn public ra ngoài, chỉ hiện dưới dạng mã hóa như email, phone,
-                .setSubject(userDetails.getUsername()) // để ko trùng lặp
+                .setSubject(username) // để ko trùng lặp
                 .setIssuedAt(new Date(System.currentTimeMillis())) // ngày tạo ra token này
                 .setExpiration(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * Long.parseLong(expiryHour)))) // giờ hệ thống + (Giờ hết hạn ex: expiryHour: 1 thì 1hour hết hạn token
                 .signWith(getKey(TokenType.ACCESS_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    private String generateRefreshToken(Map<String, Object> claims, UserDetails userDetails) {
+    private String generateRefreshToken(Map<String, Object> claims, String username) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + (1000 * 60 * 60 * 24 * Long.parseLong(expiryDay))))
                 .signWith(getKey(TokenType.REFRESH_TOKEN), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    private String generateResetToken(Map<String, Object> claims, UserDetails userDetails) {
+    private String generateResetToken(Map<String, Object> claims, String username) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + (1000 * 60 * 60)))
                 .signWith(getKey(TokenType.RESET_TOKEN), SignatureAlgorithm.HS256)
@@ -124,6 +130,10 @@ public class JwtServiceImpl implements JwtService {
     }
 
     private Claims extractAllClaims(String token, TokenType type) {
-        return Jwts.parserBuilder().setSigningKey(getKey(type)).build().parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parserBuilder().setSigningKey(getKey(type)).build().parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException | SignatureException ex) {
+            throw new ResourceNotFoundException("Access Denied with error messages: " + ex.getMessage());
+        }
     }
 }

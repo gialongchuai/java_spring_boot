@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
@@ -20,7 +21,7 @@ import java.util.*;
 @NoArgsConstructor
 @Table(name = "tbl_user")
 @Entity(name = "User")
-public class User extends AbstractEntity<Long> implements UserDetails {
+public class User extends AbstractEntity<Long> {
 
     @Column(name = "first_name")
     private String firstName;
@@ -59,37 +60,14 @@ public class User extends AbstractEntity<Long> implements UserDetails {
     @Column(name = "status")
     private UserStatus status;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
+    // map : map bảng, fetch lazy, load cha không load con, case all : xóa cha đói, con xóa đói theo
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Address> addresses = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<GroupHasUser> groupHasUsers = new HashSet<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<UserHasRole> userHasRoles = new HashSet<>();
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return UserStatus.ACTIVE.equals(status);
-    }
 }

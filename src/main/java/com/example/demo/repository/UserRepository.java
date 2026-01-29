@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import com.example.demo.model.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -13,12 +14,17 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
+    // user -> userHasRole gọi tới (UserHasRole) -> lấy role (Role)
+    // lấy đủ Role khi query user phòng fetch Lazy
+    @EntityGraph(attributePaths = { "userHasRoles.role" })
     Optional<User> findByUsername(String username);
 
+    @EntityGraph(attributePaths = { "userHasRoles.role" })
     @Query(value = "select u from User u where u.username like :username")
     User findByUsernameEntity(String username);
 
-    User findByEmail(String email);
+    @EntityGraph(attributePaths = { "userHasRoles.role" })
+    User findByEmail(String email); // ← phải có annotation này!
 
     @Query("SELECT u FROM User u INNER JOIN u.addresses a WHERE u.lastName LIKE %:lastName% AND a.street LIKE %:street% order by u.id desc")
     List<User> findAllByLastNameAndStreet(String lastName, String street);

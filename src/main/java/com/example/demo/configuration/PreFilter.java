@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Set;
 
 @Component
 @Slf4j
@@ -61,7 +62,7 @@ public class PreFilter extends OncePerRequestFilter {
 
         if(StringUtils.isNotEmpty(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            // Mỗi lần 1 request là 1 lần gội tới db truy vấn thông qua username trả về userDetails
+            // Gọi UserDetailsService — giờ nó trả CustomUserDetails đã có authorities
             UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
             if(jwtService.isValid(token, TokenType.ACCESS_TOKEN, userDetails)) {
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();

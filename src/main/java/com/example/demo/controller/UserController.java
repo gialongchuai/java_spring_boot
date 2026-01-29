@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -92,6 +93,7 @@ public class UserController {
 
     @Operation(summary = "Get information a user", description = "API get a user!")
     @GetMapping("/{userId}")
+    @PreAuthorize("hasAuthority('admin')")
     public ResponseData<UserResponse> getUser(@PathVariable @Min(1) @Valid Long userId) { // new UserRequestDTO("Tay", "Java", "abc@gmail.com", "0321123123")
 //        System.out.println("Dang get user: " + userId);
         try {
@@ -104,6 +106,7 @@ public class UserController {
 
     @Operation(summary = "Get information a user list", description = "API get list user!")
     @GetMapping("/list")
+    @PreAuthorize("hasAnyAuthority('admin', 'manager')")
     public ResponseData<PageResponse> getUserList(@RequestParam(defaultValue = "0", required = false) int pageNo
             , @Min(5) @RequestParam(defaultValue = "20", required = false) int pageSize
             , @RequestParam(required = false) String sortBy) { // sort nhiều column này là dùng Pageable

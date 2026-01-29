@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.configuration.Translator;
 import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.model.CustomUserDetails;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,14 +18,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
-        // User entity
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("user.not.found")));
+        return new CustomUserDetails(user);
 
-        // User security
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .build();
+//        // User entity
+//        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException(Translator.toLocale("user.not.found")));
+//
+//        // User security
+//        return org.springframework.security.core.userdetails.User.builder()
+//                .username(user.getUsername())
+//                .password(user.getPassword())
+//                .build();
     }
 }

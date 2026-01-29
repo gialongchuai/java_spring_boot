@@ -1,7 +1,7 @@
 Đầu tiên chạy file `docker-compose.yml` với docker:
 `docker compose up -d`
 
-Sau đó login web với localhost chỉ định postgre trong thông tin trong file đó trên local host.
+Sau đó login web với localhost chỉ định postgres trong thông tin trong file đó trên local host.
 Tiếp tục tạo mới database trên postgresql với file `postgresql.sql`
 dán nội dung vào chạy ra bảng.
 
@@ -10,6 +10,25 @@ Phím tắt:
     + chọn nhiều từ giống: alt + j
     + format code: ctrl + alt + l
     + loại bỏ code không dùng: ctrl + alt + o
+
+LazyInitializationException: lỗi gặp phải khi user set lazy tới userhasrole
+ở tầng service khi login (authenticate) gọi tới loadUser của UserDetail sao đó không biết 
+sao vẫn còn kết nối khiến gọi tới authen.getAhothur có roles trong đó ko bị lazy
+con chat nói là vẫn còn kết nối transac gì đó của spring
+
+nhưng dối với Prefilter ở tầng filter, khi gọi tới loadUser qua username
+sau đó gọi tới loadUser Detail thế mà lỗi LazyInitializationException khi gọi tới method
+getAuthor nói do mất kết nối gì đó của Spring.
+
+Cải tiến sẽ tách cái UserDetails ra riêng và sẽ luôn load được Role
+
+-- Còn cái setContextHolder gì đó, chat nói là khi login (authentice) ở service
+thành công trả token khong cần setContext gì cả tại trả về token đâu có dùng tỡi context này sau đó
+
+-- Chỉ set khi với api có kèm token ở preFilter sau đó setContext để khi xuống controller xử lý được một số
+anno như PreAuthor hoặc nếu có muốn lấy username, id, từ token lúc đó sẽ getContext.
+
+
 
 FIle `call_api_cors.html` để chạy thử cors trên fe call tới api back test...
 File `application.yml` có:
@@ -225,52 +244,6 @@ SELECT ... FROM tbl_address WHERE user_id = 1
 Có thể truyền thêm header: Accept-Language: vi-VN ; en-US ; mx-MX
 
 ---
-json cho post, update , ...
-```json
-{
-  "firstName": "Nguyen",
-  "lastName": "Van D",
-  "email": "nguyenvana@gmail.com",
-  "phone": "0901234567",
-  "dateOfBirth": "1995-08-20",
-  "gender": "female",
-  "username": "nguyenvana",
-  "password": "123456",
-  "type": "user",
-  "status": "active",
-  "addresses": [
-    {
-      "apartmentNumber": "K13",
-      "floor": "12",
-      "building": "Sunrise City",
-      "streetNumber": "123",
-      "street": "Nguyen Huu Tho",
-      "city": "Ho Chi Minh",
-      "country": "Vietnam",
-      "addressType": 1
-    },
-    {
-      "apartmentNumber": "H19",
-      "floor": "5",
-      "building": "Landmark 81",
-      "streetNumber": "208",
-      "street": "Nguyen Huu Canh",
-      "city": "Ho Chi Minh",
-      "country": "Vietnam",
-      "addressType": 2
-    },
-    {
-      "apartmentNumber": "B10",
-      "floor": "5",
-      "building": "Landmark 81",
-      "streetNumber": "208",
-      "street": "Nguyen Huu Canh",
-      "city": "Ho Chi Minh",
-      "country": "Vietnam",
-      "addressType": 2
-    }
-  ]
-}
-```
+
 
 <img width="638" height="393" alt="image" src="https://github.com/user-attachments/assets/101f06b8-4dd0-420c-855f-660a2c31ac60" />

@@ -1,17 +1,16 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.configuration.Translator;
 import com.example.demo.dto.request.EmailForgotPasswordDTO;
 import com.example.demo.dto.request.ResetPasswordRequestDTO;
 import com.example.demo.dto.request.SignInRequestDTO;
 import com.example.demo.dto.request.TokenResetPasswordDTO;
 import com.example.demo.dto.response.TokenResponse;
 import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.model.CustomUserDetails;
 import com.example.demo.model.Token;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.AuthenticationService;
-import com.example.demo.service.JwtService;
 import com.example.demo.service.TokenService;
 import com.example.demo.util.TokenType;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,10 +22,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -43,31 +44,40 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public TokenResponse authenticate(SignInRequestDTO signInRequest) {
-        // authen này là 1 câu truy vấn
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInRequest.getUsername(), signInRequest.getPassword()));
 
-        // làm thêm 1 câu truy vấn nữa
-        var user = userRepository.findByUsername(signInRequest.getUsername()).orElseThrow(()
-                -> new ResourceNotFoundException(Translator.toLocale("username.password.incorrect")));
+        try {
+            Set<String> authorities = new HashSet<>();
+            // authen này là 1 câu truy vấn
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(signInRequest.getUsername(), signInRequest.getPassword()));
+            authentication.getAuthorities().forEach(authority
+                    -> authorities.add(authority.getAuthority()));
 
-        // Token access
-        String accessToken = jwtService.generateAccessToken(user);
+            CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
-        // Token refresh
-        String refreshToken = jwtService.generateRefreshToken(user);
+            // Không cần thiết bởi vì đâu còn dùng nữa đâu mà set, có giải thích trong readme
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // save token to db
-        tokenService.save(Token.builder()
-                        .username(user.getUsername())
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                .build());
+            // Token access
+            String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername(), authorities);
 
-        return TokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .userId(user.getId())
-                .build();
+            // Token refresh
+            String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getUsername(), authorities);
+
+            // save token to db
+            tokenService.save(Token.builder()
+                    .username(user.getUsername())
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build());
+
+            return TokenResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .userId(user.getId())
+                    .build();
+        } catch (AuthenticationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -75,7 +85,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // người dùng gửi lại cái refreshToken có time lâu hơn access yêu cầu accessToken mới do accessToken ít time nên hết hạn
         // validate
         final String refreshToken = request.getHeader(AUTHORIZATION);
-        if(StringUtils.isBlank(refreshToken)) {
+        if (StringUtils.isBlank(refreshToken)) {
             throw new ResourceNotFoundException("Token must be not blank!");
         }
         log.info("Token: {}", refreshToken);
@@ -84,26 +94,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         final String username = jwtService.extractUsername(refreshToken, TokenType.REFRESH_TOKEN);
         log.info("Username: {}", username);
 
-        // truy vấn db xem username đó ổn không
-        Optional<User> user = userRepository.findByUsername(username);
-        log.info("User: {}", user.get().getId());
-        if(!jwtService.isValid(refreshToken, TokenType.REFRESH_TOKEN,user.get())) { // nếu không quăng lỗi
+        User user = userRepository.findByUsername(username).orElseThrow(() -> {
+            throw new ResourceNotFoundException("User not found!");
+        });
+
+        CustomUserDetails customUserDetails = new CustomUserDetails(user);
+
+        log.info("User: {}", user.getId());
+        if (!jwtService.isValid(refreshToken, TokenType.REFRESH_TOKEN, customUserDetails)) { // nếu không quăng lỗi
             throw new ResourceNotFoundException("Token is invalid!");
         } // ô cê thì tạo mới access mới
-        String accessToken = jwtService.generateAccessToken(user.get());
+
+        Set<String> authorities = new HashSet<>();
+        customUserDetails.getAuthorities().forEach(authority
+                -> authorities.add(authority.getAuthority()));
+        String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername(), authorities);
 
         // set lại access mới và refresh vẫn là cũ
         return TokenResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .userId(user.get().getId())
+                .userId(user.getId())
                 .build();
     }
 
     @Override
     public String logout(HttpServletRequest request) {
         final String accessToken = request.getHeader(AUTHORIZATION);
-        if(StringUtils.isBlank(accessToken)) {
+        if (StringUtils.isBlank(accessToken)) {
             throw new ResourceNotFoundException("Token must be not blank!");
         }
 
@@ -119,11 +137,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public String forgotPassword(EmailForgotPasswordDTO request) {
         User user = userRepository.findByEmail(request.getEmail());
-        if(!user.isEnabled()) {{
-            throw new ResourceNotFoundException("User is inactive");
-        }}
 
-        String resetToken = jwtService.generateResetToken(user);
+        CustomUserDetails customUserDetails = new CustomUserDetails(user);
+        if (!customUserDetails.isEnabled()) {
+            {
+                throw new ResourceNotFoundException("User is inactive");
+            }
+        }
+
+        Set<String> authorities = new HashSet<>();
+        customUserDetails.getAuthorities().forEach(authority
+                -> authorities.add(authority.getAuthority()));
+
+        String resetToken = jwtService.generateResetToken(user.getId(), user.getUsername(), authorities);
         String formConfirmEmail = String.format("curl --location 'http://localhost:8080/auth/reset-password' \\\n" +
                 "--header 'accept: */*' \\\n" +
                 "--header 'Content-Type: application/json' \\\n" +
@@ -139,8 +165,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public String resetPassword(TokenResetPasswordDTO tokenResetPassword) {
         final String secretKey = tokenResetPassword.getToken();
         final String username = jwtService.extractUsername(secretKey, TokenType.RESET_TOKEN);
-        Optional<User> user = userRepository.findByUsername(username);
-        if(!jwtService.isValid(secretKey, TokenType.RESET_TOKEN, user.get())) {
+
+        User user = userRepository.findByUsername(username).orElseThrow(() -> {
+            throw new ResourceNotFoundException("User not found!");
+        });
+
+        CustomUserDetails customUserDetails = new CustomUserDetails(user);
+
+        if (!jwtService.isValid(secretKey, TokenType.RESET_TOKEN, customUserDetails)) {
             throw new ResourceNotFoundException("Token is invalid!");
         }
         return "Reset!";
@@ -150,7 +182,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public String changePassword(ResetPasswordRequestDTO requestDTO) {
         User user = isValidToken(requestDTO.getSecretKey());
 
-        if(!requestDTO.getNewPassword().equals(requestDTO.getConfirmNewPassword())) {
+        if (!requestDTO.getNewPassword().equals(requestDTO.getConfirmNewPassword())) {
             throw new ResourceNotFoundException("Confirm Password is false!");
         }
         user.setPassword(passwordEncoder.encode(requestDTO.getNewPassword()));
@@ -163,10 +195,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         final String username = jwtService.extractUsername(secretKey, TokenType.RESET_TOKEN);
         User user = userRepository.findByUsernameEntity(username);
 
-        if(!user.isEnabled()) {{
-            throw new ResourceNotFoundException("User is inactive");
-        }}
-        if(!jwtService.isValid(secretKey, TokenType.RESET_TOKEN, user)) {
+        CustomUserDetails customUserDetails = new CustomUserDetails(user);
+
+        if (!customUserDetails.isEnabled()) {
+            {
+                throw new ResourceNotFoundException("User is inactive");
+            }
+        }
+        if (!jwtService.isValid(secretKey, TokenType.RESET_TOKEN, customUserDetails)) {
             throw new ResourceNotFoundException("Token is invalid!");
         }
 

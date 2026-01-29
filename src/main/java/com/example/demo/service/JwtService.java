@@ -4,16 +4,19 @@ import com.example.demo.model.User;
 import com.example.demo.util.TokenType;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.List;
+import java.util.Set;
+
 public interface JwtService {
     // Sử dụng đúng cái UserDetail của hệ thống
     // đã được impl
-    String generateAccessToken(UserDetails userDetails);
+    String generateAccessToken(Long userId, String username, Set<String> authorities);
 
-    String generateRefreshToken(UserDetails userDetails);
+    String generateRefreshToken(Long userId, String username, Set<String> authorities);
 
     String extractUsername(String token, TokenType type);
 
     boolean isValid(String token, TokenType tokenType, UserDetails userDetails);
 
-    String generateResetToken(User user);
+    String generateResetToken(Long userId, String username, Set<String> authorities);
 }
