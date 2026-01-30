@@ -1,10 +1,8 @@
 package com.example.demo.service;
 
-import com.example.demo.model.User;
 import com.example.demo.util.TokenType;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.List;
 import java.util.Set;
 
 public interface JwtService {

@@ -1,249 +1,362 @@
-Đầu tiên chạy file `docker-compose.yml` với docker:
-`docker compose up -d`
+# 🚀 Java Spring Boot Project
 
-Sau đó login web với localhost chỉ định postgres trong thông tin trong file đó trên local host.
-Tiếp tục tạo mới database trên postgresql với file `postgresql.sql`
-dán nội dung vào chạy ra bảng.
+## 📋 Mục lục
+- [Cài đặt & Khởi chạy](#-cài-đặt--khởi-chạy)
+- [Phím tắt IntelliJ](#-phím-tắt-intellij)
+- [LazyInitializationException](#-lazyinitializationexception)
+- [Cấu hình môi trường](#-cấu-hình-môi-trường)
+- [P6Spy - SQL Logger](#-p6spy---sql-logger)
+- [Swagger API Documentation](#-swagger-api-documentation)
+- [API Endpoints](#-api-endpoints)
+- [Mô hình phân quyền RBAC](#-mô-hình-phân-quyền-rbac)
+- [Spring Security + JWT Flow](#-spring-security--jwt-flow)
+- [Internationalization](#-internationalization)
+- [Architecture Diagram](#-architecture-diagram)
 
-Phím tắt:
-    + tìm kiếm nhanh: ctrl + shift + f
-    + chọn nhiều từ giống: alt + j
-    + format code: ctrl + alt + l
-    + loại bỏ code không dùng: ctrl + alt + o
+---
 
-LazyInitializationException: lỗi gặp phải khi user set lazy tới userhasrole
-ở tầng service khi login (authenticate) gọi tới loadUser của UserDetail sao đó không biết 
-sao vẫn còn kết nối khiến gọi tới authen.getAhothur có roles trong đó ko bị lazy
-con chat nói là vẫn còn kết nối transac gì đó của spring
+## 🛠 Cài đặt & Khởi chạy
 
-nhưng dối với Prefilter ở tầng filter, khi gọi tới loadUser qua username
-sau đó gọi tới loadUser Detail thế mà lỗi LazyInitializationException khi gọi tới method
-getAuthor nói do mất kết nối gì đó của Spring.
+### 1. Chạy Docker Compose
+```bash
+docker compose up -d
+```
 
-Cải tiến sẽ tách cái UserDetails ra riêng và sẽ luôn load được Role
+### 2. Kết nối PostgreSQL
+- Login web với **localhost** sử dụng thông tin trong file `docker-compose.yml`
 
--- Còn cái setContextHolder gì đó, chat nói là khi login (authentice) ở service
-thành công trả token khong cần setContext gì cả tại trả về token đâu có dùng tỡi context này sau đó
+### 3. Tạo Database
+- Tạo mới database trên PostgreSQL với file `postgresql.sql`
+- Dán nội dung vào và chạy để tạo bảng
 
--- Chỉ set khi với api có kèm token ở preFilter sau đó setContext để khi xuống controller xử lý được một số
-anno như PreAuthor hoặc nếu có muốn lấy username, id, từ token lúc đó sẽ getContext.
+---
 
+## ⌨️ Phím tắt IntelliJ
 
+| Phím tắt | Chức năng |
+|----------|-----------|
+| `Ctrl + Shift + F` | Tìm kiếm nhanh |
+| `Alt + J` | Chọn nhiều từ giống nhau |
+| `Ctrl + Alt + L` | Format code |
+| `Ctrl + Alt + O` | Loại bỏ code không dùng |
 
-FIle `call_api_cors.html` để chạy thử cors trên fe call tới api back test...
-File `application.yml` có:
-`
+---
+
+## ⚠️ LazyInitializationException
+
+### Vấn đề gặp phải
+Lỗi xảy ra khi `User` set `lazy` tới `UserHasRole`:
+
+**Tại tầng Service (Login/Authenticate):**
+- Khi gọi tới `loadUser` của `UserDetail`, sau đó gọi tới `authen.getAuthority` có `roles` trong đó → **KHÔNG bị lazy**
+- Nguyên nhân: Vẫn còn kết nối transaction của Spring
+
+**Tại tầng PreFilter:**
+- Khi gọi tới `loadUser` qua `username`, sau đó gọi tới `loadUserDetail` → **BỊ lỗi `LazyInitializationException`** khi gọi tới method `getAuthor`
+- Nguyên nhân: Đã mất kết nối của Spring
+
+### ✅ Giải pháp
+Tách `UserDetails` ra riêng và sẽ luôn load được `Role`
+
+### 📝 Lưu ý về SecurityContextHolder
+
+| Trường hợp | Có cần setContext? | Lý do |
+|------------|-------------------|-------|
+| Login (authenticate) ở Service | ❌ Không | Trả về token, không dùng tới context sau đó |
+| API có kèm token ở PreFilter | ✅ Có | Controller cần xử lý `@PreAuthorize` hoặc lấy `username`, `id` từ token |
+
+---
+
+## 🔧 Cấu hình môi trường
+
+### File `application.yml`
+```yaml
 spring:
-    profiles:
-        active: dev
-`
-Để dev cho nó chạy normal không bị lỗi chứ mặc định đúng là: `@spring.profiles.active@`
-để khi build java -jar bằng maven ta có thể chỉ định môi trường build
-bằng lệnh `mvn package -P test || mvn clean package -P dev
-|| mvn clean package -P dev` hoặc hình như `mvn clean package -P test, dev` được luôn 
-Có thể `ngoại trừ môi trường dev` như `mvn clean package -P !dev`
+  profiles:
+    active: dev
+```
 
-`P6Spy` giúp log dễ xem hơn, ta cần tại ra file `spy.properties`, thêm vào `application-dev.yml` và config 
-cho file `CompactSqlFormatter` trong package `config`
-ex: `[SQL]
+> **Note:** Mặc định đúng là `@spring.profiles.active@` để khi build bằng Maven có thể chỉ định môi trường
+
+### Maven Build Commands
+
+```bash
+# Build với profile cụ thể
+mvn package -P test
+mvn clean package -P dev
+
+# Build với nhiều profile
+mvn clean package -P test,dev
+
+# Build ngoại trừ môi trường
+mvn clean package -P !dev
+```
+
+### File test CORS
+File `call_api_cors.html` để chạy thử CORS trên FE call tới API backend test.
+
+---
+
+## 📊 P6Spy - SQL Logger
+
+Giúp log SQL dễ xem hơn.
+
+### Cấu hình cần thiết:
+1. Tạo file `spy.properties`
+2. Thêm config vào `application-dev.yml`
+3. Config class `CompactSqlFormatter` trong package `config`
+
+### Output mẫu:
+```sql
+[SQL]
 ExecutionTime: 3ms | Connection: 0 | UserServiceImpl.saveUser:85 |
-insert into tbl_address (address_type,apartment_number,building,city,country,created_at,created_by,floor,street,street_number,updated_at,updated_by,user_id) values (1,'K13','Sunrise City','Ho Chi Minh','Vietnam','2026-01-27T08:26:12.382+0700',NULL,'12','Nguyen Huu Tho','123','2026-01-27T08:26:12.382+0700',NULL,70)
-`
-
-Code có kèm document cho swagger thông qua link: http://localhost:8080/swagger-ui/index.html
-Với depen openai có kèm swagger trong đó
-Từ đó có thể convert qua postman bằng cách bấm vào từ `/v3/api-docs/api-service-1`
-để thấy thông tin json sau đó lưu dưới file có trong thư mục như `api-document-get-from-swagger.json`
-sau đó import vào postman
-
----
-Method for User:
-
-Post:
-`http://localhost:8080/user/`
-
-Update:
-`http://localhost:8080/user/13`
-
-Patch:
-NONE | ACTIVE | INACTIVE
-`http://localhost:8080/user/12?status=NONE`
-
-Delete:
-`http://localhost:8080/user/12`
-
-GetUser:
-`http://localhost:8080/user/14`
-
-Phân trang với 5 cái get bên dưới:
-
-GetUser list với 1 tiêu chí:
-`http://localhost:8080/user/list?pageNo=1&pageSize=10&sortBy=lastName:asc`
-
-GetUser list với nhiều tiêu chí:
-
-`http://localhost:8080/user/list-order-with-multiple-columns?pageNo=1&pageSize=10&sortBy=lastName:asc, id:desc`
-
-GetUser list với 1 tiêu dùng với EntityManager đê customize query
-`http://localhost:8080/user/list-order-with-multiple-columns-and-search?pageNo=0&pageSize=10&search=th&sortBy=id:asc`
-
-GetUser list với Criteria: sort 1 cột, search (truyền nhiều field của User), 1 field của cột đã join là Address 
-`http://localhost:8080/user/list-advance-search-with-specification?page=0&size=5&sort=id&user=firstName~a&address=city~a`
-
-GetUser list với Specification: sort của pageable, search nhiều field dựa vào speci join 2 column
-tự custom mấy toán tử và join 2 bảng thôi qua and hay or:
-đối với TH1: không truyền user and add thì dùng spring findAll với pageable là nó sort dùm
-tương tự TH2: với có mỗi user cũng dùng findAll với Spec và pageable và nó cũng sort dùm
-tuy nhiên TH3: với sort có cả add và user thì dùng entityManager nên phải custome từng cái
-thông qua pageable như page, size, sort: code có làm page size rồi nhưng sort chưa !!!
-bên dưới câu api rơi TH3 sort không ăn
-`http://localhost:8080/user/list-advance-search-with-specification?page=0&size=5&sort=id&user=firstName~a&address=city~a, street~T`
+insert into tbl_address (address_type, apartment_number, building, city, country, 
+created_at, created_by, floor, street, street_number, updated_at, updated_by, user_id) 
+values (1, 'K13', 'Sunrise City', 'Ho Chi Minh', 'Vietnam', 
+'2026-01-27T08:26:12.382+0700', NULL, '12', 'Nguyen Huu Tho', '123', 
+'2026-01-27T08:26:12.382+0700', NULL, 70)
+```
 
 ---
 
-Mô hình RBAC : Role-Based Access Control
-Phân quyền dựa trên vai trò: outsourcing, ngân hàng, ...
-là cái mô hình đang code
+## 📖 Swagger API Documentation
 
-Mô hình ACL : Access Control List
-thương mại điện tử: AWS, ...
+### Truy cập Swagger UI
+```
+http://localhost:8080/swagger-ui/index.html
+```
 
-phân tích xíu nè : RBAC
+### Export sang Postman
+1. Bấm vào `/v3/api-docs/api-service-1` để xem JSON
+2. Lưu file (như `api-document-get-from-swagger.json` trong thư mục)
+3. Import vào Postman
 
-Role:
-- "sysadmin" : người có quyền quản trị hệ thống: IT, phần cứng, .. quản trị toàn hệ thống.
-Nhưng không thay đổi các thao tác nghiệp vụ như thao tác sửa đổi bộ phận kế toán
-
-- "admin" : full quyền thao tác nghiệp vụ nhưng không có điều chỉnh đc thao tác hệ thống
-Ngược lại với anh ở trên, admin chỉ liên quan tới nghiệp vụ kinh doanh bộ phận ...
-CEO, tổng giám đốc 
-
-- "manager" : teamlead, trưởng bộ phận phòng ban
-
-- "user" : nhân viên thường xem thêm sửa nhung không dc xóa
-
-Permission:
-- "Full Access" : sysadmin thương có đủ hết
-
-- "View" : user view
-
-- "Add" : thêm bản ghi
-- "Update" : thêm bản ghi
-Thường outsorce không liên quan tài chính ngân hàng 2 cía là edit, thêm mới or hiểu là chỉnh sửa
-Còn tín dụng còn quy trình phê duyệt, chuyên viên tính dụng tạo ra hồ sơ vay vốn, hợp đồng
-Nhưng không có quyền approve (chấp thuận) vay hay ko cho vay, này phải có thẩm định viên, giám sát viên, manager
-nên tách ra update là trạng thái bản ghi approve
-
-- "Delete" : thường admin
-
-- "Upload" : thường admin cho user, manager tài liệu
-
-- "Import" : xử lý insert hàng loạt, insert file excel cho tải lên mà chưa kiểm soát tài liệu đó
-admin manager hoặc user ...
-
-- "Export" : bản báo cáo, excel : tổng kết báo cáo kinh doanh ai được xem
-manager, ceo. Cho phép ai được export, vay vốn thu chi công nợ
-
-- "Send"
-- "Share" : share mới send được, gán quyền cho xem sửa file ...
-  Khi bạn tích hợp Spring Security vào ứng dụng Spring Boot và sử dụng JWT (JSON Web Token) để xác thực stateless, toàn bộ luồng xử lý sẽ diễn ra theo một trình tự rất rõ ràng. Dưới đây là phân tích chi tiết từng bước, từ lúc người dùng gửi yêu cầu đăng nhập cho đến khi gọi một API được bảo vệ bằng token.
+> Dependency: OpenAPI (có kèm Swagger)
 
 ---
 
-1. Giai đoạn 1: Đăng nhập – Gửi username và password đến /auth/access
-   Người dùng gửi một yêu cầu POST đến endpoint /auth/access kèm theo username và password:
-   POST /auth/access
-   {
-   "username": "sysadmin",
-   "password": "123456"
-   }
-   Bước 1.1: Controller nhận request
-   Controller gọi service AuthenticationService.authenticate() để xử lý đăng nhập.
+## 🔗 API Endpoints
 
-Bước 1.2: Xác thực thông qua AuthenticationManager
-Trong service, bạn tạo một đối tượng UsernamePasswordAuthenticationToken chứa username và password, rồi truyền vào authenticationManager.authenticate(). Đây là cách chuẩn để kích hoạt cơ chế xác thực của Spring Security.
+### User CRUD
 
-Spring Security sẽ tìm AuthenticationProvider phù hợp — trong trường hợp này là DaoAuthenticationProvider mà bạn đã cấu hình trong bean provider().
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| `POST` | `/user/` | Tạo user mới |
+| `PUT` | `/user/{id}` | Update user |
+| `PATCH` | `/user/{id}?status={status}` | Thay đổi status (NONE \| ACTIVE \| INACTIVE) |
+| `DELETE` | `/user/{id}` | Xóa user |
+| `GET` | `/user/{id}` | Lấy thông tin user |
 
-Bước 1.3: DaoAuthenticationProvider gọi UserDetailsService
-DaoAuthenticationProvider tự động gọi phương thức loadUserByUsername(username) trên UserDetailsService mà bạn đã cung cấp. Cụ thể, bạn đã implement UserDetailsService như sau:
-return username -> userRepository.findByUsername(username).orElseThrow(...);
-→ Điều này dẫn đến lần truy vấn cơ sở dữ liệu đầu tiên:
-SELECT ... FROM tbl_user WHERE username = 'sysadmin'
-Kết quả trả về là một đối tượng UserDetails chứa thông tin người dùng, bao gồm mật khẩu đã được mã hóa.
+### Phân trang & Tìm kiếm
 
-Bước 1.4: So sánh mật khẩu
-Spring Security sử dụng PasswordEncoder (mà bạn đã cấu hình) để so sánh mật khẩu người dùng gửi lên với mật khẩu đã mã hóa trong cơ sở dữ liệu. Nếu khớp, quá trình xác thực thành công và trả về một đối tượng Authentication đã được xác thực.
+#### 1. List với 1 tiêu chí sort
+```
+GET /user/list?pageNo=1&pageSize=10&sortBy=lastName:asc
+```
 
-Bước 1.5: Truy vấn dư thừa (nếu có)
-Trong code hiện tại của bạn, sau khi xác thực thành công, bạn lại gọi:
-userRepository.findByUsername(username)
-→ Điều này gây ra lần truy vấn thứ hai đến cơ sở dữ liệu với cùng điều kiện. Đây là truy vấn dư thừa, vì bạn hoàn toàn có thể lấy thông tin người dùng từ Authentication.getPrincipal() thay vì truy vấn lại.
+#### 2. List với nhiều tiêu chí sort
+```
+GET /user/list-order-with-multiple-columns?pageNo=1&pageSize=10&sortBy=lastName:asc,id:desc
+```
 
-Bước 1.6: Tạo và trả về JWT token
-Sau khi có thông tin người dùng, bạn tạo một JWT token (thường chứa username hoặc userId trong phần subject) và trả về cho client.
+#### 3. List với EntityManager (customize query)
+```
+GET /user/list-order-with-multiple-columns-and-search?pageNo=0&pageSize=10&search=th&sortBy=id:asc
+```
 
-→ Kết thúc giai đoạn đăng nhập: client có token, server không lưu session (vì bạn dùng SessionCreationPolicy.STATELESS).
-2. Giai đoạn 2: Gọi API được bảo vệ – Gửi token đến /user/1
-   Người dùng gửi yêu cầu GET đến /user/1 kèm theo token trong header:
-   GET /user/1
-   Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-   Bước 2.1: Spring Security kiểm tra quyền truy cập
-   Do endpoint /user/1 không nằm trong danh sách WHITE_LIST, Spring Security yêu cầu xác thực. Trước khi vào controller, request sẽ đi qua chuỗi các filter.
+#### 4. List với Criteria
+> Sort 1 cột, search (nhiều field của User), 1 field của bảng đã join là Address
 
-Bạn đã cấu hình:
-.addFilterBefore(preFilter, UsernamePasswordAuthenticationFilter.class);
-→ Do đó, PreFilter luôn được gọi trước cho mọi request (kể cả request không có token).
+```
+GET /user/list-advance-search-with-specification?page=0&size=5&sort=id&user=firstName~a&address=city~a
+```
 
-Bước 2.2: PreFilter xử lý token
-Trong PreFilter.doFilterInternal():
+#### 5. List với Specification
+> Sort của pageable, search nhiều field dựa vào Spec join 2 column. Tự custom toán tử và join 2 bảng qua AND/OR
 
-Lấy giá trị từ header Authorization.
-Nếu header rỗng hoặc không bắt đầu bằng "Bearer ", filter sẽ bỏ qua và chuyển tiếp request. Lúc này, nếu endpoint yêu cầu xác thực, Spring Security sẽ chặn và trả về lỗi 401.
-Nếu có token hợp lệ, filter sẽ:
-Trích xuất username từ phần subject của JWT.
-Kiểm tra xem SecurityContext hiện tại đã có thông tin xác thực chưa (để tránh ghi đè).
-Gọi UserDetailsService.loadUserByUsername(username) → lần truy vấn thứ ba đến cơ sở dữ liệu:
+```
+GET /user/list-advance-search-with-specification?page=0&size=5&sort=id&user=firstName~a&address=city~a,street~T
+```
 
-SELECT ... FROM tbl_user WHERE username = 'sysadmin'
-Xác minh tính hợp lệ của token (thời hạn, chữ ký...).
-Nếu hợp lệ, tạo đối tượng Authentication và lưu vào SecurityContextHolder.
-→ Từ thời điểm này, trong suốt vòng đời của request này, Spring Security biết ai đang gọi API.
+**Lưu ý các trường hợp:**
+| TH | Điều kiện | Xử lý |
+|----|-----------|-------|
+| 1 | Không truyền user và address | Spring `findAll` với pageable → tự sort |
+| 2 | Chỉ có user | `findAll` với Spec và pageable → tự sort |
+| 3 | Có cả user và address | Dùng EntityManager → phải custom từng cái (page, size đã làm, **sort chưa implement**) |
 
-Bước 2.3: Vào controller
-Sau khi PreFilter hoàn tất, request được chuyển tiếp đến controller /user/1.
-
-Controller gọi:
-userService.getUser(1L)
-→ Bên trong, service gọi:
-
-userRepository.findById(1L)
-
-→ Lần truy vấn thứ tư:
-
-SELECT ... FROM tbl_user WHERE id = 1
-
-Bước 2.4: Serialize phản hồi và lazy load
-Entity User của bạn có quan hệ với Address (có thể là @OneToMany với FetchType.LAZY). Khi Jackson serialize đối tượng User ra JSON, nó sẽ gọi getter getAddresses(), từ đó kích hoạt lazy load.
-
-→ Lần truy vấn thứ năm:
-SELECT ... FROM tbl_address WHERE user_id = 1
-3. Tổng kết toàn bộ luồng
-   Mỗi request có token đều đi qua PreFilter, kể cả request đầu tiên hay thứ N.
-   Không có khái niệm “lần đầu không kèm token được thông qua” — nếu endpoint yêu cầu xác thực, thì bắt buộc phải có token hợp lệ.
-   Các request nằm trong WHITE_LIST (như /auth/access, /swagger-ui/**) sẽ không bị chặn, dù có hay không có token.
-   Với cấu hình hiện tại, tổng cộng có 5 lần truy vấn cơ sở dữ liệu cho 2 request (1 login + 1 gọi API):
-   Xác thực login (bắt buộc)
-   Truy vấn dư thừa khi login
-   Load user từ token trong PreFilter
-   Load user theo ID trong controller
-   Lazy load địa chỉ khi serialize
+> ⚠️ **TH3: Sort không hoạt động!**
 
 ---
 
-Có thể truyền thêm header: Accept-Language: vi-VN ; en-US ; mx-MX
+## 🔐 Mô hình phân quyền RBAC
+
+### So sánh mô hình
+
+| Mô hình | Tên đầy đủ | Use case |
+|---------|------------|----------|
+| **RBAC** | Role-Based Access Control | Outsourcing, Ngân hàng |
+| **ACL** | Access Control List | Thương mại điện tử: AWS, ... |
+
+> Dự án này sử dụng mô hình **RBAC**
+
+### 👥 Roles
+
+| Role | Mô tả | Phạm vi |
+|------|-------|---------|
+| `sysadmin` | Quản trị hệ thống: IT, phần cứng | Toàn hệ thống, **KHÔNG** thao tác nghiệp vụ |
+| `admin` | Full quyền nghiệp vụ (CEO, Tổng GĐ) | Nghiệp vụ kinh doanh, **KHÔNG** điều chỉnh hệ thống |
+| `manager` | Teamlead, Trưởng bộ phận | Phòng ban |
+| `user` | Nhân viên thường | Xem, Thêm, Sửa (không xóa) |
+
+### 🔑 Permissions
+
+| Permission | Mô tả | Ai thường có? |
+|------------|-------|---------------|
+| `Full Access` | Đủ tất cả quyền | sysadmin |
+| `View` | Xem dữ liệu | user |
+| `Add` | Thêm bản ghi | user, manager |
+| `Update` | Cập nhật bản ghi | user, manager |
+| `Delete` | Xóa bản ghi | admin |
+| `Upload` | Tải lên tài liệu | admin, user, manager |
+| `Import` | Insert hàng loạt (Excel) | admin, manager, user |
+| `Export` | Xuất báo cáo, Excel | manager, CEO |
+| `Send` | Gửi | - |
+| `Share` | Chia sẻ (gán quyền xem, sửa file) | - |
+
+> **💡 Lưu ý về Add/Update trong ngân hàng:**
+> - Outsource thường gộp chung thành "Edit"
+> - Tín dụng tách riêng: Chuyên viên tạo hồ sơ, nhưng phải có Thẩm định viên/Giám sát viên/Manager để **Approve**
 
 ---
 
+## 🔒 Spring Security + JWT Flow
 
-<img width="638" height="393" alt="image" src="https://github.com/user-attachments/assets/101f06b8-4dd0-420c-855f-660a2c31ac60" />
+> Khi tích hợp Spring Security với JWT cho xác thực stateless
+
+### Giai đoạn 1: Đăng nhập
+
+#### Request
+```http
+POST /auth/access
+Content-Type: application/json
+
+{
+  "username": "sysadmin",
+  "password": "123456"
+}
+```
+
+#### Flow chi tiết
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Controller
+    participant AuthService
+    participant AuthManager
+    participant DaoAuthProvider
+    participant UserDetailsService
+    participant DB
+
+    Client->>Controller: POST /auth/access
+    Controller->>AuthService: authenticate()
+    AuthService->>AuthManager: authenticate(UsernamePasswordToken)
+    AuthManager->>DaoAuthProvider: authenticate()
+    DaoAuthProvider->>UserDetailsService: loadUserByUsername()
+    UserDetailsService->>DB: SELECT * FROM tbl_user WHERE username = ?
+    DB-->>UserDetailsService: User data
+    UserDetailsService-->>DaoAuthProvider: UserDetails
+    DaoAuthProvider->>DaoAuthProvider: So sánh password với PasswordEncoder
+    DaoAuthProvider-->>AuthService: Authentication (đã xác thực)
+    AuthService->>AuthService: Tạo JWT Token
+    AuthService-->>Controller: Token
+    Controller-->>Client: Response with Token
+```
+
+| Bước | Mô tả |
+|------|-------|
+| 1.1 | Controller nhận request, gọi `AuthenticationService.authenticate()` |
+| 1.2 | Tạo `UsernamePasswordAuthenticationToken`, truyền vào `authenticationManager.authenticate()` |
+| 1.3 | `DaoAuthenticationProvider` gọi `loadUserByUsername()` → **Query lần 1** |
+| 1.4 | So sánh mật khẩu với `PasswordEncoder` |
+| 1.5 | ⚠️ **Truy vấn dư thừa**: Code hiện tại gọi lại `userRepository.findByUsername()` → **Query lần 2** |
+| 1.6 | Tạo JWT token và trả về client |
+
+> **Kết thúc:** Client có token, server không lưu session (`SessionCreationPolicy.STATELESS`)
+
+---
+
+### Giai đoạn 2: Gọi API được bảo vệ
+
+#### Request
+```http
+GET /user/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+#### Flow chi tiết
+
+| Bước | Mô tả |
+|------|-------|
+| 2.1 | Endpoint `/user/1` không nằm trong `WHITE_LIST` → cần xác thực |
+| 2.2 | `PreFilter.doFilterInternal()` xử lý token |
+| 2.3 | Load user từ token → **Query lần 3** |
+| 2.4 | Controller gọi `userService.getUser(1L)` → **Query lần 4** |
+| 2.5 | Jackson serialize, kích hoạt lazy load `getAddresses()` → **Query lần 5** |
+
+#### PreFilter Logic
+
+```java
+// Trong PreFilter.doFilterInternal()
+1. Lấy header Authorization
+2. Nếu rỗng hoặc không có "Bearer " → bỏ qua, Spring Security chặn (401)
+3. Nếu có token hợp lệ:
+   - Trích xuất username từ JWT subject
+   - Kiểm tra SecurityContext đã có authentication chưa
+   - Gọi UserDetailsService.loadUserByUsername()
+   - Xác minh token (thời hạn, chữ ký)
+   - Tạo Authentication và lưu vào SecurityContextHolder
+```
+
+---
+
+### 📊 Tổng kết Query
+
+| # | Query | Giai đoạn |
+|---|-------|-----------|
+| 1 | `SELECT FROM tbl_user WHERE username = ?` | Login - xác thực (bắt buộc) |
+| 2 | `SELECT FROM tbl_user WHERE username = ?` | Login - **dư thừa** ⚠️ |
+| 3 | `SELECT FROM tbl_user WHERE username = ?` | PreFilter - load user từ token |
+| 4 | `SELECT FROM tbl_user WHERE id = ?` | Controller - getUser |
+| 5 | `SELECT FROM tbl_address WHERE user_id = ?` | Lazy load addresses |
+
+> **Tổng:** 5 queries cho 2 requests (1 login + 1 API call)
+
+### 📝 Lưu ý quan trọng
+
+- ✅ Mọi request có token đều đi qua `PreFilter`
+- ✅ Endpoint yêu cầu xác thực **BẮT BUỘC** phải có token hợp lệ
+- ✅ Các request trong `WHITE_LIST` (như `/auth/access`, `/swagger-ui/**`) không bị chặn
+
+---
+
+## 🌐 Internationalization
+
+Có thể truyền thêm header để thay đổi ngôn ngữ:
+
+```http
+Accept-Language: vi-VN
+Accept-Language: en-US
+Accept-Language: mx-MX
+```
+
+---
+
+## 📐 Architecture Diagram
+
+<img width="638" height="393" alt="Architecture" src="https://github.com/user-attachments/assets/101f06b8-4dd0-420c-855f-660a2c31ac60" />
+
+---
+
+> 📅 *Last updated: January 2026*

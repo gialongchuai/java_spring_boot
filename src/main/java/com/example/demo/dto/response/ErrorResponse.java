@@ -24,9 +24,6 @@ public class ErrorResponse {
         this.message = message;
     }
 
-    public ErrorResponse(int status, String message) {
-    }
-
     public Date getTimestamp() {
         return timestamp;
     }

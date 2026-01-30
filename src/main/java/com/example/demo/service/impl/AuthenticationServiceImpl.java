@@ -140,9 +140,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
         if (!customUserDetails.isEnabled()) {
-            {
-                throw new ResourceNotFoundException("User is inactive");
-            }
+            throw new ResourceNotFoundException("User is inactive");
         }
 
         Set<String> authorities = new HashSet<>();
@@ -198,9 +196,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 
         if (!customUserDetails.isEnabled()) {
-            {
-                throw new ResourceNotFoundException("User is inactive");
-            }
+            throw new ResourceNotFoundException("User is inactive");
         }
         if (!jwtService.isValid(secretKey, TokenType.RESET_TOKEN, customUserDetails)) {
             throw new ResourceNotFoundException("Token is invalid!");

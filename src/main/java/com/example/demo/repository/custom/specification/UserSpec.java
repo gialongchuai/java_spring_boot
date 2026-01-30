@@ -2,11 +2,6 @@ package com.example.demo.repository.custom.specification;
 
 import com.example.demo.model.User;
 import com.example.demo.util.Gender;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.domain.Specification;
 
 public class UserSpec {

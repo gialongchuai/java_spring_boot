@@ -1,9 +1,9 @@
 package com.example.demo.dto.request;
 
-import com.example.demo.model.AbstractEntity;
-import com.example.demo.model.User;
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder

@@ -4,11 +4,7 @@ import com.example.demo.dto.request.UserRequestDTO;
 import com.example.demo.dto.response.PageResponse;
 import com.example.demo.dto.response.UserResponse;
 import com.example.demo.util.UserStatus;
-import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.userdetails.UserDetailsService;
-
-import java.util.List;
 
 public interface UserService {
 

@@ -27,14 +27,4 @@ public class LocaleResolver extends AcceptHeaderLocaleResolver implements WebMvc
         // còn nêếu có thì parse nó và tìm kiếm
         return StringUtils.hasLength(languageHeader) ? Locale.lookup(Locale.LanguageRange.parse(languageHeader), locales) : Locale.ENGLISH;
     }
-
-//    @Bean
-//    public ResourceBundleMessageSource bundleMessageSource() {
-//        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-//        messageSource.setBasename("messages");
-//        messageSource.setDefaultEncoding("UTF-8");
-//        messageSource.setUseCodeAsDefaultMessage(true);
-//        messageSource.setCacheSeconds(3600);
-//        return messageSource;
-//    }
 }
