@@ -16,16 +16,16 @@ import java.util.List;
 @Getter
 @ToString
 public class UserRequestDTO {
-    @NotBlank(message = "firstName must not be blank!")
+//    @NotBlank(message = "firstName must not be blank!")
     private String firstName;
 
-    @NotNull(message = "lastName must not be null!")
+//    @NotNull(message = "lastName must not be null!")
     private String lastName;
 
     @Email
     private String email;
 
-    @PhoneNumber
+//    @PhoneNumber
     private String phone;
     private Date dateOfBirth;
 

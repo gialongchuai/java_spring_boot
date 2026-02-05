@@ -9,6 +9,10 @@ yarn tailwindcss init -p
 
 change info trong file tailwind.config.cjs
 
+yarn add react-hook-form
+
+yarn add @tanstack/react-query@^5.90.12 @tanstack/react-query-devtools@^5.91.1 yup@^0.32.11 lodash@^4.17.21 axios@^1.1.3
+
 ---
 
 ## ⌨️ Phím tắt IntelliJ

@@ -29,17 +29,21 @@ public class AppConfig implements WebMvcConfigurer {
 
     CustomUserDetailsService customUserDetailsService;
     PreFilter preFilter;
-    String[] WHITE_LIST = {"/auth/**"};
+    String[] WHITE_LIST = {"/auth/**", "/user/**"};
     PasswordEncoder passwordEncoder;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("http://localhost:63342")
+                .allowedOriginPatterns(
+                        "http://localhost:63342",
+                        "http://localhost:3000"
+                )
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
+
 
 
     // Sau khi thêm depen security thì swagger yêu cầu phải username + password
