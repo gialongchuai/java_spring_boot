@@ -1,3 +1,5 @@
+import type { AuthResponse } from "../types/auth.type";
 import http from "../utils/http";
 
-export const authenticate = (body: {username: string; password: string}) => http.post('/auth/access',body);
+export const login = (body: { username: string; password: string }) =>
+  http.post<AuthResponse>("/auth/access", body);

@@ -1,30 +1,38 @@
-import { Link } from "react-router-dom";
+import { data, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import { authenticate } from "../../apis/auth.api";
+import { login } from "../../apis/auth.api";
+import Input from "../../components/Input/Input";
+import { getRules, schema, type Schema } from "../../utils/rules";
+import { yupResolver } from "@hookform/resolvers/yup";
+// import type { Schema } from "yup";
+
+type FormData = Pick<Schema, "username" | "password" | "confirm_password">;
+const registerSchema = schema.pick(["username", "password", "confirm_password"]);
 
 export default function Register() {
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   formState: { errors },
-  // } = useForm();
-
-  const { register, handleSubmit } = useForm<{
-    username: string;
-    password: string;
-  }>();
-
-  const authMutation = useMutation({
-    mutationFn: authenticate,
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(registerSchema),
   });
 
-  const onSubmit = handleSubmit((data) => {
-    authMutation.mutate(data); // ← data đã đúng shape
-  });
+  // const authMutation = useMutation({
+  //   mutationFn: authenticate,
+  // });
+
+  // const onSubmit = handleSubmit((data) => {
+  //   authMutation.mutate(data); // ← data đã đúng shape
+  // });
+
+  // const rules = getRules();
+
+  const onSubmit = handleSubmit((data) => console.log(data));
 
   return (
-    <div className="bg-orange">
+    <div className="bg-purple-300">
       <div>
         <title>Đăng ký | Shopee Clone</title>
         <meta
@@ -41,27 +49,31 @@ export default function Register() {
               onSubmit={onSubmit}
             >
               <div className="text-2xl">Đăng ký</div>
-              <input
-                // type="email"
+              <Input
+                name="username"
+                register={register}
+                type="username"
                 className="mt-8"
-                placeholder="Email"
-                {...register("username")}
+                errorMessage={errors.username?.message}
+                placeholder="Username"
               />
-              <input
+              <Input
+                name="password"
+                register={register}
                 type="password"
                 className="mt-2"
+                errorMessage={errors.password?.message}
                 placeholder="Password"
-                autoComplete="on"
-                {...register("password")}
               />
 
-              {/* <input
+              <Input
+                name="confirm_password"
+                register={register}
                 type="password"
                 className="mt-2"
+                errorMessage={errors.confirm_password?.message}
                 placeholder="Confirm Password"
-                autoComplete="on"
-                {...register('confirm_password')}
-              /> */}
+              />
 
               <div className="mt-2">
                 <button

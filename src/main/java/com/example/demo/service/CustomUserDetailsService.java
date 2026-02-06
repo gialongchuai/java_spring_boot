@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.configuration.Translator;
-import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.exception.custom.ResourceNotFoundException;
 import com.example.demo.model.CustomUserDetails;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;

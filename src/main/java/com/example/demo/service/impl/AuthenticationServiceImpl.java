@@ -5,7 +5,7 @@ import com.example.demo.dto.request.ResetPasswordRequestDTO;
 import com.example.demo.dto.request.SignInRequestDTO;
 import com.example.demo.dto.request.TokenResetPasswordDTO;
 import com.example.demo.dto.response.TokenResponse;
-import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.exception.custom.ResourceNotFoundException;
 import com.example.demo.model.CustomUserDetails;
 import com.example.demo.model.Token;
 import com.example.demo.model.User;

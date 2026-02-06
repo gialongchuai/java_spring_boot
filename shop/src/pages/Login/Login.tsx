@@ -1,8 +1,39 @@
+import { yupResolver } from "@hookform/resolvers/yup";
+import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { login } from "../../apis/auth.api";
+import Input from "../../components/Input/Input";
+import { schema, type Schema } from "../../utils/rules";
+
+type FormData = Pick<Schema, "username" | "password">;
+const loginSchema = schema.pick(["username", "password"]);
 
 export default function Login() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(loginSchema)
+  });
+
+  // const onSubmit = handleSubmit((data) => console.log(data));
+
+  const loginMutation = useMutation({
+    mutationFn: login,
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    loginMutation.mutate(data, {
+      onSuccess: (data) => {
+        console.log(data);
+      }
+    })
+  });
+
   return (
-    <div className="bg-orange">
+    <div className="bg-purple-300">
       <div>
         <title>Đăng nhập | Shopee Clone</title>
         <meta name="description" content="Đăng nhập vào dự án Shopee Clone" />
@@ -11,23 +42,30 @@ export default function Login() {
         <div className="grid grid-cols-1 py-12 lg:grid-cols-5 lg:py-32 lg:pr-10">
           <div className="lg:col-span-2 lg:col-start-4">
             <form
+              onSubmit={onSubmit}
               className="rounded bg-white p-10 shadow-sm"
               noValidate
             >
               <div className="text-2xl">Đăng nhập</div>
-              <input
-                name="email"
-                type="email"
+
+              <Input
+                name="username"
+                register={register}
+                type="username"
                 className="mt-8"
-                placeholder="Email"
+                errorMessage={errors.username?.message}
+                placeholder="Username"
               />
-              <input
+
+              <Input
                 name="password"
+                register={register}
                 type="password"
                 className="mt-2"
+                errorMessage={errors.password?.message}
                 placeholder="Password"
-                autoComplete="on"
               />
+
               <div className="mt-3">
                 <button
                   type="submit"

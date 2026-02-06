@@ -13,6 +13,20 @@ yarn add react-hook-form
 
 yarn add @tanstack/react-query@^5.90.12 @tanstack/react-query-devtools@^5.91.1 yup@^0.32.11 lodash@^4.17.21 axios@^1.1.3
 
+nói chung là chỉnh nhiều lắm có gì vào package json xem lại nhé
+
+thăng tailwindcss thì css cho nó dễ nhưng trong mấy cái tsx
+muốn nhận nó đôi khi bị lỗi không nhận thêm cái @tailwindcss line clapm gì đó :vv
+
+--- Frontend
+
+Thằng yup nó validate mấy cía form bên rule
+qua bên Page tsx thì chỉ cần pick mấy cái nó validate mà thôi
+
+Thằng composnent đa số chứa mấy cía dùng chug ví dụ Ipunt nhận cía prop bên tsx truyền qua
+nó hứng rồi return ra jsx tương thích
+
+
 ---
 
 ## ⌨️ Phím tắt IntelliJ

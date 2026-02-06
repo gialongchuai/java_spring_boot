@@ -6,7 +6,7 @@ import com.example.demo.dto.response.PageResponse;
 import com.example.demo.dto.response.ResponseData;
 import com.example.demo.dto.response.ResponseError;
 import com.example.demo.dto.response.UserResponse;
-import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.exception.custom.ResourceNotFoundException;
 import com.example.demo.service.UserService;
 import com.example.demo.util.UserStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +19,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 

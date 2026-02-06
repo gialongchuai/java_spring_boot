@@ -5,7 +5,7 @@ import com.example.demo.dto.request.AddressRequestDTO;
 import com.example.demo.dto.request.UserRequestDTO;
 import com.example.demo.dto.response.PageResponse;
 import com.example.demo.dto.response.UserResponse;
-import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.exception.custom.ResourceNotFoundException;
 import com.example.demo.model.Address;
 import com.example.demo.model.User;
 import com.example.demo.repository.AddressRepository;

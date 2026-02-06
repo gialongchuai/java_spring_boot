@@ -1,10 +1,13 @@
-package com.example.demo.exception;
+package com.example.demo.exception.custom;
 
 import com.example.demo.configuration.Translator;
+import com.example.demo.dto.response.ApiResponse;
 import com.example.demo.dto.response.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -17,6 +20,16 @@ import java.util.Date;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(value = AppException.class)
+    ResponseEntity<ApiResponse> handlingAppException(AppException appException) {
+        BaseErrorCode baseErrorCode = appException.getBaseErrorCode();
+        return ResponseEntity.status(baseErrorCode.getHttpStatusCode())
+                .body(ApiResponse.builder()
+                        .code(baseErrorCode.getCode())
+                        .message(baseErrorCode.getMessage())
+                        .build());
+    }
 
     @ExceptionHandler({MethodArgumentNotValidException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -39,7 +52,21 @@ public class GlobalExceptionHandler {
         errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
         errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
         errorResponse.setError(HttpStatus.BAD_REQUEST.getReasonPhrase());
-        String shortMessage = e.getMessage().substring(e.getMessage().indexOf(":")+1);
+        String shortMessage = e.getMessage().substring(e.getMessage().indexOf(":") + 1);
+        errorResponse.setMessage(shortMessage);
+
+        return errorResponse;
+    }
+
+    @ExceptionHandler({InternalAuthenticationServiceException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInternalAuthenticationServiceException(InternalAuthenticationServiceException e, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setTimestamp(new Date());
+        errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        errorResponse.setError(HttpStatus.BAD_REQUEST.getReasonPhrase());
+        String shortMessage = e.getMessage().substring(e.getMessage().indexOf(":") + 1);
         errorResponse.setMessage(shortMessage);
 
         return errorResponse;
