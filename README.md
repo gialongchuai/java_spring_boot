@@ -1,7 +1,5 @@
 # 🛒 Shobee Phunschanh - Fullstack E-Commerce Project
 
-**Lưu ý:** ***Phần README này mình đưa chat nó gen cho không biết có ok không, nên có gì hãy đọc code để hiểu rõ hơn. Hiện tại mình code chưa xong hẳn, có gì sau này sẽ cập nhật thêm nha.***
-
 ---
 
 ## 📖 Giới thiệu chung
@@ -11,7 +9,7 @@ Dự án **Shobee Phunschanh** là một ứng dụng thương mại điện t�
 
 ## ⌨️ Phím tắt IntelliJ IDEA
 
-- `Ctrl + Shift + F`: Tìm kiếm toàn bộ project  
+- `Ctrl + Shift + F` || `Shift + Shift`: Tìm kiếm toàn bộ project  
 - `Ctrl + Shift + N`: Tìm nhanh file (vd: User.class)  
 - `Alt + J`: Chọn nhiều từ giống nhau  
 - `Ctrl + Alt + L`: Format code  
@@ -23,17 +21,17 @@ Dự án **Shobee Phunschanh** là một ứng dụng thương mại điện t�
 
 - `Alt + Shift + F`: Format code  
 - `Ctrl + D`: Chọn nhiều từ giống nhau  
-- `Ctrl + R`: Mở file gần đây (recent files)  
+- `Ctrl + R`: Mở project gần đây (project files)  
+- `Ctrl + P`: Tìm nhanh file (vd: Page.tsx)  
 - `Shift + Alt + O`: Loại bỏ import/code không sử dụng  
 - `Alt + ←`: Quay lại vị trí trước (sau khi Ctrl + Click)  
-- `Ctrl + Shift + I`: Mở chat phụ (tuỳ extension)  
+- `Ctrl + Shift + I`: Mở chat phụ (tuỳ extension) hoặc Ctrl + P > Open Chat  
 - `Ctrl + Shift + P`: Mở Command Palette  
-- `Ctrl + P`: Tìm nhanh file (vd: Page.tsx)  
 
 ### 📌 Một số lệnh trong Command Palette
 
 - `Accounts: Sign Out`: Đăng xuất tài khoản  
-- `Collapse Folders in Explorer`: Thu gọn toàn bộ thư mục  
+- `Collapse Folders in Explorer`: Thu gọn toàn bộ thư mục, sử dụng khi Ctrl + P >
 
 ## 🚀 Công nghệ sử dụng (Tech Stack)
 
@@ -180,7 +178,7 @@ Frontend sẽ được Build bằng Vite và mở nhanh chóng tại Port 3000 (
   *💡 Phân loại xử lý các trường hợp Tìm Kiếm & Lọc:*
   - **TH1:** Không truyền user hay address ➡️ Dùng Spring `findAll` kèm Pageable (tự động Sort).
   - **TH2:** Chỉ có trường dữ liệu user ➡️ Dùng `findAll` kết hợp Specification và Pageable (tự động Sort).
-  - **TH3:** Có cả user và address ➡️ Dùng `EntityManager` tự xây dựng query phức tạp. (Đã xử lý Page, Size. ⚠️ **Lưu ý: Sort chưa hoạt động ở TH3! Mình định làm TH3 chat luôn cho nhanh mà chưa kịp làm xong, có gì sau này sẽ cập nhật thêm nha.**)
+  - **TH3:** Có cả user và address ➡️ Dùng `EntityManager` tự xây dựng query phức tạp. (Đã xử lý Page, Size. ⚠️ **Lưu ý: Sort chưa hoạt động ở TH3! Mình định làm TH3 mà chưa kịp làm xong, có gì sau này sẽ cập nhật thêm nha.**)
 - **Tối Ưu Hoá Log (P6Spy): Có gì bật mấy file liên quan tới P6Spy lên là thấy log SQL**
   - Ghi đè cấu hình ghi log SQL siêu trực quan giúp Debug Query thay vì dùng `show-sql` mặc định của Hibernate. Tính performance cho 1 truy vấn database cực nhanh.
 - **REST APIs Tự Động Hóa (Swagger):** 
@@ -211,4 +209,3 @@ Khi cấu hình Model với `FetchType.LAZY` (User lấy Role):
 **Lưu ý:** Filter yêu cầu tối ưu gọi Database (đã giảm từ 5 Query/Request xuống tối ưu hơn)!
 
 ---
-> 📅 **Cập nhật lần cuối:** Bản phân tích Code Base Tháng 23/03/2026.
